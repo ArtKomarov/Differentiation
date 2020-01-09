@@ -43,12 +43,13 @@ Analyzer::~Analyzer() {
     free(this->s - this->slen);
     this->s = NULL;
     delete this->tree;
+    this->tree = NULL;
 }
 
 // Analyze expression, that must contain last symbol #
 Node* Analyzer::GetG() {
     Node *val = GetE(); //Get x+y or x-y
-    if(*s != '#')
+    if(val != NULL && *s != '#')
         fprintf(stderr, "Syntax error: expected last symbol \"#\"!\n");
     return val;
 }
@@ -242,6 +243,7 @@ Node *Analyzer::GetPow() {
         if(val2 == NULL) {
             fprintf(stderr, "Syntax error, expected correct expression after ^!\n");
             delete val;
+            val = NULL;
             return NULL;
         }
         total = new Node(OP, '^', val, val2);
@@ -252,7 +254,7 @@ Node *Analyzer::GetPow() {
 
 Node *Analyzer::GetL() {
     Node* val;
-    if(strcmp("ln", s) == 0) {
+    if(strncmp("ln", s, 2) == 0) {
         s += 2;
     }
     else

@@ -8,47 +8,55 @@
 #include "diffconsts.h"
 #include "analyzer.h"
 
-
 using namespace std;
 
+char SupDotFile[] = "Sup.dot";
+
 int main(int argc, char* argv[]) {
-    puts("Для создание графа-дерева введите первым параметром командной строки имя файла (расширение .dot).");
-    puts("Для сохранения графа-дерева картинкой введите вторым параметром командной строки имя файла (расширение .png).");
-    puts("Для сохранения продиффиринцированного графа-дерева картинкой введите третьтим параметром командной строки имя файла (расширение .png).");
-    puts("Введите вычисляемое выражение, без пробелов, с завершающим символом #");
+    //puts("To create a tree graph, enter the file name (.dot extension) as the first command line parameter.");
+    puts("To save the graph-tree with a picture, enter the file name (.png expression) as the first parametr of command line.");
+    puts("To save a differentiated tree graph with a picture, enter the file name (extension .png) with the second command line parameter.");
+    puts("Enter a calculated expression, without spaces, with a trailing character #");
     char input[1024];
     if(fgets(input, 1024, stdin) == NULL) {
-        fprintf(stderr, "Выражение не было введено! (fgets failed)\n");
+        fprintf(stderr, "Expression not entered! (fgets failed)\n");
         return -1;
     }
     Analyzer *a = new Analyzer(input);
-    if(argc > 1) {
-        a->tree->MakeGraphFile(argv[1]);
-        if(argc > 2) {
-            sprintf(input, "dot %s -Tpng -o %s", argv[1], argv[2]);
-            if(system(input) == -1) {
-                if(argv[1] == NULL || argv[2] == NULL)
-                    fprintf(stderr, "system: null argument!\n");
-                else
-                    fprintf(stderr, "Невозможно создать картинку %s из %s, нет доступа к shell либо невозможно создать дочерний процесс! (Command \"system\" failed) \n", argv[1], argv[2]);
-            }
-            if(argc > 3) {
-                char s[1024];
-                sprintf(s, "Sup.dot");
-                a->tree->SaveTree(s);
-            }
-            //a->tree->Optimization();
+    if(argc > 1 && a->tree != NULL) {
+        a->tree->MakeGraphFile(SupDotFile);
+        sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[1]);
+        if(system(input) == -1) {
+            if(argv[1] == NULL)
+                fprintf(stderr, "system: null argument!\n");
+            else
+                fprintf(stderr, "Impossible to create picture %s, no access to shell, or impossible to create child process! (Command \"system\" failed) \n", argv[1]);
+        }
 
-            //delete a;
+        if(argc > 2) {
             Node* n = a->tree->Diff();
             n->Optimization();
-            n->MakeGraphFile(argv[4]);
-            sprintf(input, "dot %s -Tpng -o %s", argv[4], argv[5]);
-            system(input);
-            delete a;
+            n->MakeGraphFile(SupDotFile);
+            sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[2]);
+            if(system(input) == -1) {
+                if(argv[2] == NULL)
+                    fprintf(stderr, "system: null argument!\n");
+                else
+                    fprintf(stderr, "Impossible to create picture %s, no access to shell, or impossible to create child process! (Command \"system\" failed) \n", argv[2]);
+            }
             delete n;
+            n = NULL;
         }
+        nod_val var;
+        puts("Enter value of variable:");
+        if(scanf("%d", &var) != 1) {
+            fputs("Value of variable did't enter!\n", stderr);
+        }
+        else
+            printf("Ответ: %d\n", a->tree->TreeCount(var));
     }
-    //printf("Ответ: %d\n", a.tree->TreeCount());
+    delete a;
+    a = NULL;
+    //printf("Ответ: %d\n", a->tree->TreeCount());
     return 0;
 }

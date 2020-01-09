@@ -40,7 +40,7 @@ public:
     void    TreeConstruct(char* filename);
     int     FScanNode(char* CurStr, FILE* fd);
     int     NumberOfNodes();
-    nod_val TreeCount();
+    nod_val TreeCount(nod_val var);
 
     bool    IsVar();
     Node*   Diff();
