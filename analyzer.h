@@ -19,7 +19,7 @@ private:
 
     //Node* OpUnion(Node* nod1, Node* nod2, char op);
     //Node* OpUnion(Node* nod1, char op);
-    void  MyAssert(bool b);
+    //void  MyAssert(bool b);
 public:
     Node* tree;
     Analyzer(char* input);
@@ -29,7 +29,7 @@ public:
     Node* GetN();
     Node* GetE();
     Node* GetT();
-    Node* GetP();
+    Node* GetB();
     Node* GetV();
     Node* GetVN();
     Node* GetSin();
@@ -37,6 +37,8 @@ public:
     Node* GetSC();
     Node* GetPow();
     Node* GetL();
+
+    Node* GetSB(const char* func_name);
 
 };
 

@@ -7,7 +7,7 @@
 #include "diffconsts.h"
 #include "analyzer.h"
 
-                                                           //private
+//private
 /*Node* Analyzer::OpUnion(Node* nod1, Node* nod2, char op) {
     assert(nod1  != NULL);
     assert(nod2  != NULL);
@@ -28,7 +28,7 @@
 //        fprintf(stderr, "Ошибка, ожидалась скобка! (символ \"(\" или \")\", зависит от контекста)\n");
 //}
 
-                                                           //public
+//public
 // Constructor
 Analyzer::Analyzer(char* s) {
     assert(s != NULL);
@@ -49,35 +49,24 @@ Analyzer::~Analyzer() {
 // Analyze expression, that must contain last symbol #
 Node* Analyzer::GetG() {
     Node *val = GetE(); //Get x+y or x-y
-    if(val != NULL && *s != '#')
-        fprintf(stderr, "Syntax error: expected last symbol \"#\"!\n");
-    return val;
-}
 
-// Analyze sub-expression, that contain constant value
-Node* Analyzer::GetN() {
-    int val = 0;
-    char *start = s;
-    while(*s >= '0' && *s <= '9') {
-        val = val * 10 + (*(s++) - '0');
-    }
-    if(start == s) return NULL;
-    Node* n = new Node(NUM, val);
-    return n;
+    if(val != NULL && (*s != '\n') && (*s != '\0'))
+        std::cerr << "Syntax error: the expression was expected to end, but a " << *s << " was found!" << std::endl;
+    return val;
 }
 
 //Analyze sub-expression that contain addition or subtractin
 Node *Analyzer::GetE() {
-    Node* val = GetT(); // Get x*y or x/y // May be NULL in case of '-'
+    Node* val = GetT(); // Get x*y or x/y // May be NULL in case of unary operator '-'
     Node* total;
 
-    while(*s == '+' || *s == '-') {
+    while(*s == '+' || *s == '-') { // Get second, third, ... terms
         char oper = *s;
         s++;
         Node* val2 = GetT(); // Get x*y or x/y
 
         if(val2 == NULL) {
-            fprintf(stderr, "Syntax error: expected correct expression after /'%c/'!\n", oper);
+            std::cerr << "Syntax error: expected correct expression after /'" << oper << "/'!" << std::endl;
             if(val != NULL) delete val;
             return NULL;
         }
@@ -87,13 +76,14 @@ Node *Analyzer::GetE() {
         else if(val != NULL)
             total = new Node(OP, oper, val, val2);
         else {
-            fprintf(stderr, "Syntax error: expected correct expression before /'+/'!\n");
+            std::cerr << "Syntax error: expected correct expression before /'+/'!" << std::endl;
             if(val != NULL) delete val;
             return NULL;
         }
 
-        val = total;
+        val = total; // Collect result
     }
+
     return val;
 }
 
@@ -101,68 +91,103 @@ Node *Analyzer::GetE() {
 Node *Analyzer::GetT() {
     Node* val = GetPow(); // Get x^y
     Node* total;
+
+
     while(*s == '*' || *s == '/') {
         if(val == NULL) {
-            fprintf(stderr, "Syntax error: expected correct expression before /'%c/'!\n", *s);
+            std::cerr << "Syntax error: expected correct expression before \'"
+                      << *s << "\'!" << std::endl;
             return NULL;
         }
         char oper = *s++;
 
         Node* val2 = GetPow(); //Get x^y
+
         if(val2 == NULL) {
-            fprintf(stderr, "Syntax error: expected correct expression before /'%c/'!\n", *s);
+            std::cerr << "Syntax error: expected correct expression before \'"
+                      << *s << "\'!" << std::endl;
             if(val != NULL) delete val;
             return NULL;
         }
+
         total = new Node(OP, oper, val, val2);
-        val = total;
+        val   = total;
     }
     return val;
 }
 
+//Analyze sub-expression that contain power
+Node *Analyzer::GetPow() {
+    Node* val = GetB(); // Get (x)
+    Node* total;
+
+    while(*s == '^') {
+        if(val == NULL) {
+            std::cerr << "Syntax error, expected correct expression before \'^\'!" << std::endl;
+            return NULL;
+        }
+        s++;
+
+        Node* val2 = GetB(); // Get (x)
+        if(val2 == NULL) {
+            std::cerr << "Syntax error, expected correct expression after \'^\'!" << std::endl;
+            delete val;
+            val = NULL;
+            return NULL;
+        }
+
+        total = new Node(OP, '^', val, val2);
+        val = total;
+    }
+
+    return val;
+}
+
 //Analyze sub-expression that contain braces (x)
-Node* Analyzer::GetP() {
+Node* Analyzer::GetB() {
     if(*s == '(') {
         s++;
         Node* val = GetE(); // Get x+y or x-y
+
         if(val == NULL) { //expresion
-            fprintf(stderr, "Syntax error, expected expresion after /'(/'!\n");
+            std::cerr << "Syntax error, expected expresion after \'(\'!" << std::endl;
             return NULL;
         }
 
         if(*s++ != ')')
-            fprintf(stderr, "Syntax error, expected /')/'!\n");
+            std::cerr << "Syntax error, expected \')\'!" << std::endl;
         return val;
     }
     else
-        return GetVN(); //Get sin/cos, var or const (or const * var)
+        return GetVN(); //Get sin/cos, ln, var or const (or const * var)
 }
 
-//Analyze sub-expression that contain variable (var = x)
-Node* Analyzer::GetV() {
-    char *start = s;
-    if(this->varstr == "") {
-        while((*s >= 'A' && *s <= 'Z') || (*s >= 'a' && *s <= 'z') || (*s == '_')) {
-            this->varstr += *s++;
-            //s++;
-        }
+//Analyze sub-expression that MUST contain braces (x)
+Node* Analyzer::GetSB(const char* func_name) {
+
+
+    if(*s++ != '(') {
+        std::cerr << "Syntax error, expected \'(\' after "
+                  << func_name << "!" << std::endl;
+        return nullptr;
     }
-    else {
-        int i = 0;
-        while((*s >= 'A' && *s <= 'Z') || (*s >= 'a' && *s <= 'z') || (*s == '_')) {
-            if(this->varstr[i] != *s) {
-                fprintf(stderr, "Our analyzer works only with 1 variable!\n");
-                return NULL;
-            }
-            i++;
-            s++;
-        }
+
+    Node* val = GetE(); // Get x+y or x-y
+
+    if(val == NULL) { //expresion
+        std::cerr << "Syntax error, expected expresion after \""
+                  << func_name << "(\" !" << std::endl;
+        return nullptr;
     }
-    if(start == s) return NULL;
-    else {
-        Node* n = new Node(VAR);
-        return n;
+
+    if(*s++ != ')') {
+        std::cerr << "Syntax error, expected \')\' after argument of "
+                  << func_name << "!" << std::endl;
+        delete val;
+        val = nullptr;
     }
+
+    return val;
 }
 
 //Analyze sub-expression that contain sin/cos, variable or constant (or const * var)
@@ -171,12 +196,14 @@ Node* Analyzer::GetVN() {
           *val2 = NULL;
     if((val1 = GetSC()) != NULL) // Get sin(x) or cos(x)
         return val1;
+
     if((val1 = GetL()) != NULL) // Get ln(x)
         return val1;
-    if((val1 = GetN()) != NULL) { // Get const
+
+    if((val1 = GetN()) != NULL) {     // Get const
         if((val2 = GetV()) != NULL) { // Get var
             Node* total;
-            total = new Node(OP, '*', val1, val2);
+            total = new Node(OP, '*', val1, val2); // It means, that 5x -> 5 * x
             return total;
         }
         else {
@@ -228,30 +255,7 @@ Node* Analyzer::GetSC() {
     return val2;
 }
 
-//Analyze sub-expression that contain power
-Node *Analyzer::GetPow() {
-    Node* val = GetP(); // Get (x)
-    Node* total;
-    while(*s == '^') {
-        if(val == NULL) {
-            fprintf(stderr, "Syntax error, expected correct expression before ^!\n");
-            return NULL;
-        }
-        s++;
-
-        Node* val2 = GetP(); // Get (x)
-        if(val2 == NULL) {
-            fprintf(stderr, "Syntax error, expected correct expression after ^!\n");
-            delete val;
-            val = NULL;
-            return NULL;
-        }
-        total = new Node(OP, '^', val, val2);
-        val = total;
-    }
-    return val;
-}
-
+// Analyze sub-expression, that contatin ln() function
 Node *Analyzer::GetL() {
     Node* val;
     if(strncmp("ln", s, 2) == 0) {
@@ -259,6 +263,7 @@ Node *Analyzer::GetL() {
     }
     else
         return NULL;
+
     if(*s++ != '(')
         fprintf(stderr, "Syntax error, expected /'(/' after ln!\n");
 
@@ -271,3 +276,57 @@ Node *Analyzer::GetL() {
     Node* val2 = new Node(OP, 'l', val);
     return val2;
 }
+
+// Analyze sub-expression, that contain constant value
+Node* Analyzer::GetN() {
+    nod_val val   = 0;
+    char   *start = s;
+
+    // Start parsing
+    while(*s >= '0' && *s <= '9') {
+        val = val * 10 + (*(s++) - '0');
+    }
+
+    nod_val ord = 1e-1;
+    if(*s == '.') {
+        s++;
+        while(*s >= '0' && *s <= '9') {
+            val = val + (*(s++) - '0') * ord;
+            ord /= 10;
+        }
+    }
+
+    if(start == s) return NULL;
+
+    Node* res = new Node(NUM, val);
+    return res;
+}
+
+//Analyze sub-expression that contain variable (var = x)
+Node* Analyzer::GetV() {
+    char *start = s;
+    if(this->varstr == "") {
+        while((*s >= 'A' && *s <= 'Z') || (*s >= 'a' && *s <= 'z') || (*s == '_')) {
+            this->varstr += *s++;
+            //s++;
+        }
+    }
+    else {
+        int i = 0;
+        while((*s >= 'A' && *s <= 'Z') || (*s >= 'a' && *s <= 'z') || (*s == '_')) {
+            if(this->varstr[i] != *s) {
+                fprintf(stderr, "Our analyzer works only with 1 variable!\n");
+                return NULL;
+            }
+            i++;
+            s++;
+        }
+    }
+
+    if(start == s) return NULL;
+    else {
+        Node* n = new Node(VAR);
+        return n;
+    }
+}
+

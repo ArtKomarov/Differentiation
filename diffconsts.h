@@ -2,7 +2,7 @@
 #define DIFFCONSTS_H
 
 
-typedef int nod_val;
+typedef double nod_val;
 
 #define MAX_NAME_LEN 256
 #define MAX_NUM_OF_NODES 512
@@ -10,7 +10,7 @@ typedef int nod_val;
 enum {
     NUM = 1,
     VAR = 2,
-    OP = 3
+    OP  = 3
 };
 
 

@@ -3,13 +3,15 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <fstream>
+//#include "gtest/gtest.h"
 
 #include "diffconsts.h"
 #include "node.h"
 
 // Used to make graph by graphwiz
 const char GraphHeader[] = "digraph G{\n "
-                                  "node [style=\"filled\", fillcolor=\"orange\", fontcolor=\"blue\"];\n";
+                           "node [style=\"filled\", fillcolor=\"orange\", fontcolor=\"blue\"];\n";
 
 // Node::Constructor == Node::Node
 //Free construtor
@@ -19,24 +21,24 @@ Node::Node() {}
 Node::Node(int type, nod_val val) {
     switch(type) {
     case NUM: {
-        this->type = type;
-        this->val  = val;
+        type_ = type;
+        val_  = val;
         break;
     }
     case OP: {
-        fprintf(stderr, "Node::Construct for numbers used for operation!\n");
+        std::cerr << __PRETTY_FUNCTION__ << " for numbers used for operation!" << std::endl;
         NodeSet(type, val, new Node(NUM, 0), new Node(NUM, 0));
         break;
     }
     case VAR: {
-        fprintf(stderr, "Node::Construct for numbers used for variable!\n");
+        std::cerr << __PRETTY_FUNCTION__ << " for numbers used for variable!\n" << std::endl;
         NodeSet(type);
         break;
     }
     default:
-        this->type = type;
-        this->val  = val;
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
+        type_ = type;
+        val_  = val;
+        UNKNOWN_TYPE_MSG(type)
     }
 }
 
@@ -44,21 +46,24 @@ Node::Node(int type, nod_val val) {
 Node::Node(int type) {
     switch(type) {
     case VAR:
-        this->val  = 'x';
-        this->type = VAR;
+        val_  = static_cast<nod_val>('x');
+        type_ = VAR;
         break;
+
     case NUM:
-        fprintf(stderr, "Node::Construct for variables used for number!\n");
+        std::cerr <<  __PRETTY_FUNCTION__ << " for variables used for number!" << std::endl;
         NodeSet(type, 0);
         break;
+
     case OP:
-        fprintf(stderr, "Node::Construct for variables used for operation!\n");
+        std::cerr <<  __PRETTY_FUNCTION__ << " for variables used for operation!" << std::endl;
         NodeSet(type, 0, new Node(NUM, 0), new Node(NUM, 0));
         break;
+
     default:
-        this->type = type;
-        this->val = 'U';
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
+        type_ = type;
+        val_  = 0; //static_cast<nod_val>('U');
+        UNKNOWN_TYPE_MSG(type)
     }
 }
 
@@ -66,35 +71,37 @@ Node::Node(int type) {
 Node::Node(int type, nod_val val, Node* left, Node* right) {
     switch(type) {
     case OP: {
-        this->type  = type;
-        this->val   = val;
+        type_  = type;
+        val_   = val;
+
         if(left == NULL) {
-            fprintf(stderr, "Node::Construct: left child of operation node is NULL!\n");
-            this->left = new Node(NUM, 0);
+            std::cerr <<  __PRETTY_FUNCTION__ << ": left child of operation node is NULL!" << std::endl;
+            left_ = new Node(NUM, 0);
         }
         else
-            this->left  = left;
-        this->right = right;
+            left_ = left;
+
+        right_ = right;
         break;
     }
     case VAR: {
         if(left != NULL || right != NULL)
-            fprintf(stderr, "Node::Construct for operation used for variable!\n");
+            std::cerr <<  __PRETTY_FUNCTION__ << " for operation used for variable!" << std::endl;
         NodeSet(type);
         break;
     }
     case NUM: {
         if(left != NULL || right != NULL)
-            fprintf(stderr, "Node::Construct for operation used for number!\n");
+            std::cerr <<  __PRETTY_FUNCTION__ << " for operation used for number!" << std::endl;
         NodeSet(type, val);
         break;
     }
     default: {
-        this->type  = type;
-        this->val   = val;
-        this->left  = left;
-        this->right = right;
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
+        type_  = type;
+        val_   = val;
+        left_  = left;
+        right_ = right;
+        UNKNOWN_TYPE_MSG(type)
     }
     }
 }
@@ -104,213 +111,230 @@ Node::Node(int type, nod_val val, Node* left) {
     assert(left  != NULL);
     switch(type) {
     case OP: {
-        this->type  = type;
-        this->val   = val;
-        this->left  = left;
+        type_  = type;
+        val_   = val;
+        left_  = left;
         break;
     }
     case NUM: {
-        fprintf(stderr, "Node::Construct for operations used for number!\n");
+        std::cerr <<  __PRETTY_FUNCTION__ << " for operations used for number!" << std::endl;
         NodeSet(type, val);
         break;
     }
     case VAR: {
-        fprintf(stderr, "Node::Construct for operations used for variable!\n");
+        std::cerr <<  __PRETTY_FUNCTION__ << " for operations used for variable!" << std::endl;
         NodeSet(type);
         break;
     }
     default:
-        this->type  = type;
-        this->val   = val;
-        this->left  = left;
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
+        type_  = type;
+        val_   = val;
+        left_  = left;
+        UNKNOWN_TYPE_MSG(type)
     }
 }
 
 // Recursive destructor
 Node::~Node() {
-    if(this->left != NULL) {
-        delete this->left;
-        this->left = NULL;
+    if(left_ != NULL) {
+        delete left_;
+        left_ = NULL;
     }
-    if(this->right != NULL) {
-        delete this->right;
-        this->right = NULL;
+    if(right_ != NULL) {
+        delete right_;
+        right_ = NULL;
     }
 }
 
 // Node fileds setter for numerical nodes
 void Node::NodeSet(int type, nod_val val) {
     if(type != OP && type != VAR && type != NUM)
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
-    this->type  = type;
-    this->val   = val;
+        UNKNOWN_TYPE_MSG(type)
+
+    type_  = type;
+    val_   = val;
 }
 
 // Node fileds setter for variable nodes
 void Node::NodeSet(int type) {
     if(type != OP && type != VAR && type != NUM)
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
-    this->type  = type;
-    this->val   = 'x';
+        UNKNOWN_TYPE_MSG(type)
+
+    type_  = type;
+    val_   = 'x';
 }
 
 // Node fileds setter for operation nodes
 void Node::NodeSet(int type, nod_val val, Node* left, Node* right) {
     if(type != OP && type != VAR && type != NUM)
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
-    this->type  = type;
-    this->val   = val;
-    this->left  = left;
-    this->right = right;
+        UNKNOWN_TYPE_MSG(type)
+    type_  = type;
+    val_   = val;
+    left_  = left;
+    right_ = right;
 }
 
 // Node fileds setter for unary operation nodes
 void Node::NodeSet(int type, nod_val val, Node* left) {
     if(type != OP && type != VAR && type != NUM)
-        fprintf(stderr, "Node::Construct: unknown type! Number of type %d, equal character %c.\n", type, type);
-    this->type  = type;
-    this->val   = val;
-    this->left  = left;
+        UNKNOWN_TYPE_MSG(type)
+    type_  = type;
+    val_   = val;
+    left_  = left;
 }
 
 // Recursive copy tree, whose root is this node
 Node* Node::NodeCopy() {
     Node* left = NULL;
     Node* right = NULL;
-    if(this->left != NULL)
-        left = this->left->NodeCopy();
-    if(this->right != NULL)
-        right = this->right->NodeCopy();
-    return new Node(this->type, this->val, left, right);
+    if(left_ != NULL)
+        left = left_->NodeCopy();
+    if(right_ != NULL)
+        right = right_->NodeCopy();
+    return new Node(type_, val_, left, right);
 }
 
 // Value getter
 nod_val Node::GetVal() {
-    return this->val;
+    return val_;
 }
 
 // Support function for Node::MakeGraphFile - prints node
-int Node::FPrintGraphNode(FILE* fd) {
+int Node::FPrintGraphNode(std::ofstream& out) {
     long id      = this - (Node*)0x0; // Unique id for every node, that helps building correct the graph
     long leftid  = 0;
     long rightid = 0;
-    if(this->left != NULL) {
-        leftid = this->left - (Node*)0x0;
-        fprintf(fd, "%ld [label = ", leftid);
-        if(this->left->type == NUM) {
-            fprintf(fd, "\"%d\"]\n", this->left->val);
+    if(left_ != NULL) {
+        leftid = left_ - (Node*)0x0;
+        out << leftid <<" [label = ";
+        if(left_->type_ == NUM) {
+            out << "\"" << left_->val_ <<"\"]\n";
         }
         else
-            fprintf(fd, "\"%c\"]\n", this->left->val);
-        fprintf(fd, "%ld -> %ld\n", id, leftid);
+            out << "\"" << left_->val_ << "\"]\n";
+        out << id << " -> " << leftid << "\n";
     }
-    if(this->right != NULL) {
-        rightid = this->right - (Node*)0x0;
-        fprintf(fd, "%ld [label = ", rightid);
-        if(this->right->type == NUM) {
-            fprintf(fd, "\"%d\"]\n", this->right->val);
+    if(right_ != NULL) {
+        rightid = right_ - (Node*)0x0;
+        out << rightid << " [label = ";
+        if(right_->type_ == NUM) {
+            out << "\"" << right_->val_ << "\"]\n";
         }
         else
-            fprintf(fd, "\"%c\"]\n", this->right->val);
-        fprintf(fd, "%ld -> %ld\n", id, rightid);
+            out << "\"" << right_->val_ << "\"]\n";
+        out << id <<" -> " << rightid << "\n";
     }
-    if(this->left != NULL)
-        this->left->Node::FPrintGraphNode(fd);
-    if(this->right != NULL)
-        this->right->Node::FPrintGraphNode(fd);
+    if(left_ != NULL)
+        left_->Node::FPrintGraphNode(out);
+    if(this->right_ != NULL)
+        right_->Node::FPrintGraphNode(out);
     return 0;
 }
 
 //Making file, that used by graphwiz to build graph
-int Node::MakeGraphFile(char* FileName) {
+int Node::MakeGraphFile(const char* FileName) {
     assert(FileName != NULL);
-    FILE* fd;
-    if((fd = fopen(FileName, "w")) == NULL) {
-        perror("fopen");
+
+    std::ofstream out(FileName);
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
         return -1;
     }
-    fputs(GraphHeader, fd);
-    long id = this - (Node*)0x0;
-    fprintf(fd, "%ld [label = ", id);
-    if(this->type == NUM) {
-        fprintf(fd, "\"%d\"]\n", this->val);
+
+    out << GraphHeader;
+    long id = this - (Node*)0x0;                          // down
+    out << id << " [label = ";
+    if(type_ == NUM) {
+        out << "\"" << val_ << "\"]\n";
     }
     else
-        fprintf(fd, "\"%c\"]\n", this->val);
-    this->Node::FPrintGraphNode(fd);
-    fprintf(fd, "}\n");
-    fclose(fd);
+        out << "\"" << val_ << "\"]\n";
+    this->Node::FPrintGraphNode(out);
+    out << "}\n";
+    //fclose(fd);
+    //out.close();
     return 0;
 }
 
 // Support function for Node::SaveTree, prints node
-int Node::FPrintNode(FILE* fd) {
-    assert(fd != NULL);
-    printf("%d %d\n", this->type, this->val);
-    fprintf(fd, "%d %d\n", this->type, this->val);
-    if(this->left != NULL) {
-        printf("(");
-        fprintf(fd, "(");
-        this->left->Node::FPrintNode(fd);
+int Node::FPrintNode(std::ofstream& out) {
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
     }
-    if(this->right != NULL) {
-        printf(",");
-        fprintf(fd, ",");
-        this->right->Node::FPrintNode(fd);
-        printf(")\n");
-        fprintf(fd, ")\n");
+    //printf("%d %d\n", type_, val_);
+    out << type_ << " " << val_ << std::endl;
+    if(left_ != NULL) {
+        //printf("(");
+        out << "(";
+        left_->Node::FPrintNode(out);
     }
-    else if(this->left != NULL) {
-        printf(")\n");
-        fprintf(fd, ")\n");
+    if(right_ != NULL) {
+        //printf(",");
+        out << ",";
+        right_->Node::FPrintNode(out);
+        //printf(")\n");
+        out << ")\n";
+    }
+    else if(left_ != NULL) {
+        //printf(")\n");
+        out << ")\n";
     }
     return 0;
 }
 
 // Simple saving graph (expression) to file for future reset
-int Node::SaveTree(char* filename) {
+int Node::SaveTree(const char* filename) {
     assert(filename != NULL);
-    FILE* fd;
-    if((fd = fopen(filename, "w")) == NULL) {
-        perror("fopen");
+    std::ofstream out(filename);
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
         return -1;
     }
-    printf("%d %d\n", this->type, this->val);
-    fprintf(fd, "%d %d\n", this->type, this->val);
-    if(this->left != NULL)
-        this->left->Node::FPrintNode(fd);
-    if(this->right != NULL)
-        this->right->Node::FPrintNode(fd);
-    fclose(fd);
+    
+    out << type_ << " " << val_ << std::endl;
+    out << type_ << " " << val_ << std::endl;
+    if(left_ != NULL)
+        left_->Node::FPrintNode(out);
+    if(right_ != NULL)
+        right_->Node::FPrintNode(out);
+    //fclose(fd);
     return 0;
 }
 
 // Build tree from file
-void Node::TreeConstruct(char* filename) {
+void Node::TreeConstruct(const char* filename) {
     assert(filename != NULL);
-    FILE* fd;
-    if((fd = fopen(filename, "r")) == NULL) {
-        perror("fopen");
+    std::ifstream in(filename);
+    if(!in) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
         return;
     }
-    this->left  = NULL;
-    this->right = NULL;
-    if(fscanf(fd, "%d%d", &this->type, &this->val) == EOF) {
-        fclose(fd);
+    
+    left_  = NULL;
+    right_ = NULL;
+    
+    in >> type_;
+    if(!in.good())
         return;
-    }
+    in >> val_;
+    
+//    if(fscanf(fd, "%d%d", &type_, &val_) == EOF) {
+//        fclose(fd);
+//        return;
+//    }
+
     char buff[MAX_NAME_LEN+1];
-    fgets(buff, MAX_NAME_LEN, fd);
-    this->FScanNode(buff, fd);
-    fclose(fd);
+    in.getline(buff, MAX_NAME_LEN); //fgets(buff, MAX_NAME_LEN, fd);
+
+    this->FScanNode(buff, in);
+    //fclose(fd);
 }
 
 //Support function for Node::TreeConstruct (scan node)
-int Node::FScanNode(char* CurStr, FILE* fd) {
-    assert(fd  != NULL);
+int Node::FScanNode(char* CurStr, std::ifstream& in) {
+    assert(!in.fail()); //assert(fd  != NULL);
     //char buff[MAX_NAME_LEN+1];
-    if(fgets(CurStr, MAX_NAME_LEN + 1, fd) == NULL || CurStr[0] == '\n') {
+    if(!in.getline(CurStr, MAX_NAME_LEN + 1) || CurStr[0] == '\n') { //fgets(CurStr, MAX_NAME_LEN + 1, fd) == NULL || CurStr[0] == '\n') {
         return -1;
     }
     else {
@@ -320,9 +344,11 @@ int Node::FScanNode(char* CurStr, FILE* fd) {
         if(CurStr[0] != '(')
             return 0;
         else {
-            this->left = new Node;
-            sscanf(CurStr + 1, "%d%d", &this->left->type, &this->left->val);
-            if(this->left->Node::FScanNode(CurStr, fd) == -1) return -1;
+            left_ = new Node;
+            sscanf(CurStr + 1, "%d%d", &left_->type_, &left_->val_);
+            if(left_->Node::FScanNode(CurStr, in) == -1)
+                return -1;
+
             if(CurStr[0] != ',') {
                 if(CurStr[0] != ')') {
                     fprintf(stderr, "Invalid format of input file!!!\n");
@@ -330,15 +356,17 @@ int Node::FScanNode(char* CurStr, FILE* fd) {
                 }
             }
             else {
-                this->right = new Node;
-                sscanf(CurStr + 1, "%d%d", &this->right->type, &this->right->val);
-                if(this->right->Node::FScanNode(CurStr, fd) == -1) return -1;
+                right_ = new Node;
+                sscanf(CurStr + 1, "%d%d", &right_->type_, &right_->val_);
+
+                if(right_->Node::FScanNode(CurStr, in) == -1) return -1;
                 if(CurStr[0] != ')') {
                     fprintf(stderr, "Invalid format of input file!!!\n");
                     return -1;
                 }
             }
-            fgets(CurStr, MAX_NAME_LEN + 1, fd);
+            in.getline(CurStr, MAX_NAME_LEN + 1);
+            //fgets(CurStr, MAX_NAME_LEN + 1, fd);
         }
     }
     return 0;
@@ -347,61 +375,61 @@ int Node::FScanNode(char* CurStr, FILE* fd) {
 // Calculate number of nodes in tree, started by this root (used by destructor)
 int Node::NumberOfNodes() {
     int i = 0;
-    if(this->left != NULL)
-        i += this->left->NumberOfNodes();
-    if(this->right != NULL)
-        i += this->right->NumberOfNodes();
+    if(left_ != NULL)
+        i += left_->NumberOfNodes();
+    if(right_ != NULL)
+        i += right_->NumberOfNodes();
     return i + 1;
 }
 
 // Calculate expression, that contain in this tree
 nod_val Node::TreeCount(nod_val var) {
-    switch(this->type) {
+    switch(type_) {
     case OP:
-        if(this->left == NULL) {
-            fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
+        if(left_ == NULL) {
+            fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
             return 0;
         }
-        switch(this->val) {
+        switch(static_cast<char>(val_)) {
         case '+':
-            if(this->right == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
+            if(right_ == NULL) {
+                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
             }
-            return this->left->TreeCount(var) + this->right->TreeCount(var);
+            return left_->TreeCount(var) + right_->TreeCount(var);
         case '-':
-            if(this->right == NULL) {
+            if(right_ == NULL) {
                 //fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
-                return (nod_val)((-1) * this->left->TreeCount(var));
+                return (nod_val)((-1) * left_->TreeCount(var));
             }
-            return this->left->TreeCount(var) - this->right->TreeCount(var);
+            return left_->TreeCount(var) - right_->TreeCount(var);
         case '*':
-            if(this->right == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
+            if(right_ == NULL) {
+                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
             }
-            return this->left->TreeCount(var) * this->right->TreeCount(var);
+            return left_->TreeCount(var) * right_->TreeCount(var);
         case '/':
-            if(this->right == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
+            if(right_ == NULL) {
+                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
             }
-            return this->left->TreeCount(var) / this->right->TreeCount(var);
+            return left_->TreeCount(var) / right_->TreeCount(var);
         case '^':
-            if(this->right == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
+            if(right_ == NULL) {
+                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
             }
-            return (nod_val) pow(this->left->TreeCount(var), this->right->TreeCount(var));
+            return (nod_val) pow(left_->TreeCount(var), right_->TreeCount(var));
         case 's':
-            return (nod_val) sin(this->left->TreeCount(var));
+            return (nod_val) sin(left_->TreeCount(var));
         case 'c':
-            return (nod_val) cos(this->left->TreeCount(var));
+            return (nod_val) cos(left_->TreeCount(var));
         case 'l':
-            return (nod_val) log(this->left->TreeCount(var));
+            return (nod_val) log(left_->TreeCount(var));
         default:
-            fprintf(stderr, "There is broken tree, unknown operation \"%c\"!\n", this->val);
+            fprintf(stderr, "There is broken tree, unknown operation \"%c\"!\n", val_);
             return 0;
         }
         break;
     case NUM:
-        return this->val;
+        return val_;
     case VAR:
         if(var != NAN)
             return var;
@@ -410,7 +438,7 @@ nod_val Node::TreeCount(nod_val var) {
             return 0;
         }
     default:
-        fprintf(stderr, "There is broken tree, unknown type number \"%d\"!\n", this->type);
+        fprintf(stderr, "There is broken tree, unknown type number \"%d\"!\n", type_);
         return 0;
     }
 }
@@ -446,15 +474,15 @@ Node* Node::operator ^(int other) {
 
 // Reccursive check, does this tree contain variable node
 bool Node::IsVar() {
-    if(this->type == VAR)
+    if(type_ == VAR)
         return true;
     bool VarLeft, VarRight;
-    if(this->left != NULL)
-        VarLeft = this->left->IsVar();
+    if(left_ != NULL)
+        VarLeft = left_->IsVar();
     else
         VarLeft = false;
-    if(this->right != NULL)
-        VarRight = this->right->IsVar();
+    if(right_ != NULL)
+        VarRight = right_->IsVar();
     else
         VarRight = false;
     return VarLeft || VarRight;
@@ -462,80 +490,80 @@ bool Node::IsVar() {
 
 // Differentiation this tree
 Node* Node::Diff() {
-    if(this->type == NUM)
+    if(type_ == NUM)
         return new Node(NUM, 0);
-    if(this->type == VAR)
+    if(type_ == VAR)
         return new Node(NUM, 1);
-    if(this->type != OP) {
+    if(type_ != OP) {
         fprintf(stderr, "Unknown type of node!\n");
         return NULL;
     }
 
-    switch (this->val) {
+    switch (static_cast<char>(val_)) {
     case '+':
-        return *this->left->Diff() + this->right->Diff();
+        return *left_->Diff() + right_->Diff();
         break;
     case '-':
-        if(this->right == NULL) {
-            return new Node(OP, '-', this->left->Diff());
+        if(right_ == NULL) {
+            return new Node(OP, '-', left_->Diff());
         }
-        return *this->left->Diff() - this->right->Diff();
+        return *left_->Diff() - right_->Diff();
         break;
     case '*':
-        return *(*this->left->Diff() * this->right->NodeCopy()) + (*this->left->NodeCopy() * this->right->Diff());
+        return *(*left_->Diff() * right_->NodeCopy()) + (*left_->NodeCopy() * right_->Diff());
         break;
     case '/':
-        return *(*(*this->left->Diff() * this->right->NodeCopy()) - (*this->left->NodeCopy() * this->right->Diff())) / (*this->right->NodeCopy() ^ 2);
+        return *(*(*left_->Diff() * right_->NodeCopy()) - (*left_->NodeCopy() * right_->Diff())) / (*right_->NodeCopy() ^ 2);
         break;
     case 's':
-        if(this->left == NULL) {
+        if(left_ == NULL) {
             fprintf(stderr, "Diff: No argument in sin!\n"); //argument of sin/cos must be left child
             return this->NodeCopy();
         }
-        return *new Node(OP, 'c', this->left->NodeCopy()) * this->left->Diff();
+        return *new Node(OP, 'c', left_->NodeCopy()) * left_->Diff();
         break;
     case 'c':
-        if(this->left == NULL) {
+        if(left_ == NULL) {
             fprintf(stderr, "Diff: No argument in cos!\n"); //argument of cos/sin must be left child
             return this->NodeCopy();
         }
-        return *(*new Node(NUM, 0) - new Node(OP, 's', this->left->NodeCopy())) * this->left->Diff();
+        return *(*new Node(NUM, 0) - new Node(OP, 's', left_->NodeCopy())) * left_->Diff();
         break;
     case '^':
-        if(this->left == NULL || this->right == NULL) {
+        if(left_ == NULL || right_ == NULL) {
             fprintf(stderr, "Diff: Left or right child does not exists for /'^/'!\n");
             return this->NodeCopy();
         }
 
         //May be chack IsVar, but it will do optimization
-        if(this->right->IsVar() == false) { // (x^a)' = a * x^(a-1) * x'
-            Node* mul1 = this->right->NodeCopy();
-            Node* mul2 = *this->left->NodeCopy() ^ (*this->right->NodeCopy() - 1);
-            Node* mul3 = this->left->Diff();
+        if(right_->IsVar() == false) { // (x^a)' = a * x^(a-1) * x'
+            Node* mul1 = right_->NodeCopy();
+            Node* mul2 = *left_->NodeCopy() ^ (*right_->NodeCopy() - 1);
+            Node* mul3 = left_->Diff();
             return *mul1 * (*mul2 * mul3);
         }
-        else if(this->left->IsVar() == false){ // (a^x)' = a^x * ln(a) * x'
+        else if(left_->IsVar() == false){ // (a^x)' = a^x * ln(a) * x'
             Node* mul1 = this->NodeCopy();
-            Node* mul2 = new Node(OP, 'l', this->left->NodeCopy());
-            Node* mul3 = this->right->Diff(); //?
+            Node* mul2 = new Node(OP, 'l', left_->NodeCopy());
+            Node* mul3 = right_->Diff(); //?
             return *mul1 * (*mul2 * mul3);
         }
         else { // (f^g)' = (e ^ (g * ln(f)))' = (f^g) * (g' * ln(f) + (f' / f) * g) = (x^x)(ln(x) + 1/x * x)
             Node* mul1 = this->NodeCopy();
-            Node* add1 = *this->right->Diff() * (new Node(OP, 'l', this->left->NodeCopy()));
-            Node* add2 = *(*this->left->Diff() / this->left->NodeCopy()) * this->right->NodeCopy();
+            Node* add1 = *right_->Diff() * (new Node(OP, 'l', left_->NodeCopy()));
+            Node* add2 = *(*left_->Diff() / left_->NodeCopy()) * right_->NodeCopy();
             return *mul1 * (*add1 + add2);
         }
         break;
     case 'l': // ln(x)' = (1/x) * x'
-        if(this->left == NULL) {
+        if(left_ == NULL) {
             fprintf(stderr, "Diff: Left child does not exists for /'ln/'!\n");
             return this->NodeCopy();
         }
-        return new Node(OP, '/', this->left->Diff(), this->NodeCopy());
+        return new Node(OP, '/', left_->Diff(), this->NodeCopy());
         break;
     default:
-        fprintf(stderr, "Diff: Unknown operation \"%c\"!\n", this->val);
+        fprintf(stderr, "Diff: Unknown operation \"%c\"!\n", val_);
         return NULL;
         break;
     }
@@ -543,91 +571,91 @@ Node* Node::Diff() {
 
 // Reccursive optimization, delete nodes, that don't effect on the value of expression
 int Node::Optimization() {
-    switch(this->type) {
+    switch(type_) {
     case NUM:
-        return this->val;
+        return val_;
     case VAR:
         return -1;
     case OP: {
         int LeftVal  = 0;
         int RightVal = 0;
-        if(this->left != NULL)
-            LeftVal  = this->left->Optimization();
-        if(this->right != NULL)
-            RightVal = this->right->Optimization();
-        Node* Left  = this->left;
-        Node* Right = this->right;
-        switch (this->val) {
+        if(left_ != NULL)
+            LeftVal  = left_->Optimization();
+        if(right_ != NULL)
+            RightVal = right_->Optimization();
+        Node* Left  = left_;
+        Node* Right = right_;
+        switch (static_cast<char>(val_)) {
         case '+':
         case '-':
             if(RightVal == 0 && LeftVal == 0) {
-                delete this->left;
-                delete this->right;
-                this->left  = NULL;
-                this->right = NULL;
+                delete left_;
+                delete right_;
+                left_  = NULL;
+                right_ = NULL;
                 this->NodeSet(NUM, 0);
                 return 0;
             }
             else if(RightVal == 0) {
-                delete this->right;
-                this->right = NULL;
-                this->NodeSet(this->left->type, this->left->val, this->left->left, this->left->right);
-                Left->left  = NULL;
-                Left->right = NULL;
+                delete right_;
+                right_ = NULL;
+                this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
+                Left->left_  = NULL;
+                Left->right_ = NULL;
                 delete Left;
                 Left = NULL;
-                return this->val;
+                return val_;
             }
             else if(LeftVal == 0) {
-                delete this->left;
-                this->left = NULL;
-                if(this->val == '-')
+                delete left_;
+                left_ = NULL;
+                if(val_ == '-')
                     return '-';
-                this->NodeSet(this->right->type, this->right->val, this->right->left, this->right->right);
-                Right->left  = NULL;
-                Right->right = NULL;
+                this->NodeSet(right_->type_, right_->val_, right_->left_, right_->right_);
+                Right->left_  = NULL;
+                Right->right_ = NULL;
                 delete Right;
                 Right = NULL;
-                return this->val;
+                return val_;
             }
             break;
 
         case '*':
             if(LeftVal == 0 || RightVal == 0) {
-                delete this->left;
-                delete this->right;
-                this->left  = NULL;
-                this->right = NULL;
+                delete left_;
+                delete right_;
+                left_  = NULL;
+                right_ = NULL;
                 this->NodeSet(NUM, 0);
                 return 0;
             }
             else if (RightVal == 1 && LeftVal == 1) {
-                delete this->left;
-                delete this->right;
-                this->left  = NULL;
-                this->right = NULL;
+                delete left_;
+                delete right_;
+                left_  = NULL;
+                right_ = NULL;
                 this->NodeSet(NUM, 1);
                 return 1;
             }
             else if(RightVal == 1) {
-                delete this->right;
-                this->right = NULL;
-                this->NodeSet(this->left->type, this->left->val, this->left->left, this->left->right);
-                Left->left  = NULL;
-                Left->right = NULL;
+                delete right_;
+                right_ = NULL;
+                this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
+                Left->left_  = NULL;
+                Left->right_ = NULL;
                 delete Left;
                 Left = NULL;
-                return this->val;
+                return val_;
             }
             else if(LeftVal == 1) {
-                delete this->left;
-                this->left = NULL;
-                this->NodeSet(this->right->type, this->right->val, this->right->left, this->right->right);
-                Right->left  = NULL;
-                Right->right = NULL;
+                delete left_;
+                left_ = NULL;
+                this->NodeSet(right_->type_, right_->val_, right_->left_, right_->right_);
+                Right->left_  = NULL;
+                Right->right_ = NULL;
                 delete Right;
                 Right = NULL;
-                return this->val;
+                return val_;
             }
             break;
         case '/':
@@ -636,42 +664,42 @@ int Node::Optimization() {
                 return '/';
             }
             else if(LeftVal == 0) {
-                delete this->left;
-                delete this->right;
-                this->left  = NULL;
-                this->right = NULL;
+                delete left_;
+                delete right_;
+                left_  = NULL;
+                right_ = NULL;
                 this->NodeSet(NUM, 0);
                 return 0;
             }
             else if (RightVal == 1 && LeftVal == 1) {
-                delete this->left;
-                delete this->right;
-                this->left  = NULL;
-                this->right = NULL;
+                delete left_;
+                delete right_;
+                left_  = NULL;
+                right_ = NULL;
                 this->NodeSet(NUM, 1);
                 return 1;
             }
             else if(RightVal == 1) {
-                delete this->right;
-                this->right = NULL;
-                this->NodeSet(this->left->type, this->left->val, this->left->left, this->left->right);
-                Left->left  = NULL;
-                Left->right = NULL;
+                delete right_;
+                right_ = NULL;
+                this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
+                Left->left_  = NULL;
+                Left->right_ = NULL;
                 delete Left;
                 Left = NULL;
-                return this->val;
+                return val_;
             }
             break;
         case 's':
         case 'c':
             if(LeftVal == 0) {
-                delete this->left;
-                this->left  = NULL;
-                if(this->val == 's')
+                delete left_;
+                left_  = NULL;
+                if(val_ == 's')
                     this->NodeSet(NUM, 0);
                 else
                     this->NodeSet(NUM, 1);
-                return this->val;
+                return val_;
             }
             break;
         case '^':
@@ -681,44 +709,45 @@ int Node::Optimization() {
                     return '^';
                 }
                 else {
-                    delete this->left;
-                    delete this->right;
-                    this->left  = NULL;
-                    this->right = NULL;
+                    delete left_;
+                    delete right_;
+                    left_  = NULL;
+                    right_ = NULL;
                     this->NodeSet(NUM, 0);
                     return 0;
                 }
             }
             if(LeftVal == 1 || RightVal == 0) {
-                delete this->left;
-                delete this->right;
-                this->left  = NULL;
-                this->right = NULL;
+                delete left_;
+                delete right_;
+                left_  = NULL;
+                right_ = NULL;
                 this->NodeSet(NUM, 1);
                 return 1;
             }
             else if(RightVal == 1) {
-                delete this->right;
-                this->right = NULL;
-                this->NodeSet(this->left->type, this->left->val, this->left->left, this->left->right);
-                Left->left  = NULL;
-                Left->right = NULL;
+                delete right_;
+                right_ = NULL;
+                this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
+                Left->left_  = NULL;
+                Left->right_ = NULL;
                 delete Left;
                 Left = NULL;
-                return this->val;
+                return val_;
             }
             break;
         case 'l':
-            return this->val;
+            return val_;
         default:
-            fprintf(stderr, "Unknown operation %c!\n", this->val);
+            fprintf(stderr, "Unknown operation %c!\n", val_);
             break;
         }
         break;
     }
     default:
-        fprintf(stderr, "Optimization: Unknown type \"%d\"!\n", this->type);
+        fprintf(stderr, "Optimization: Unknown type \"%d\"!\n", type_);
     }
-    return this->val;
+    return val_;
 }
+
 
