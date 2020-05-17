@@ -29,6 +29,7 @@ private:
     Node* operator /(Node* other);
     Node* operator ^(Node* other);
     Node* operator ^(int other);
+
 public:
     Node ();
     Node (int type);
@@ -57,7 +58,8 @@ public:
     size_t  NumberOfNodes   ();
     nod_val TreeCount       (nod_val var);
 
-    int MakeTex           (const char* FileName);
+    int MakeTex           (const char* FileName, bool completed = true);
+    int MakeTex           (std::ofstream& out,   bool completed = false);
     int MakeTexNode       (std::ofstream& out);
     int MakeBinaryNodeTex (std::ofstream& out, char val_char, const char *left = "", const char *center = "", const char *right = "");
     int MakeUnaryNodeTex  (std::ofstream& out, char val_char, const char *left = "", const char *right  = "");
@@ -65,7 +67,8 @@ public:
     bool    IsVar();
     Node*   Diff ();
 
-    int     Optimization();
+    int Optimization();
+    int DiffTex     (const char* FileName, bool optim = true);
 };
 
 class Node2 : public Node {
@@ -80,13 +83,13 @@ if(NODE) {                                     \
     return -1;                                 \
 }
 
-#define MAKE_LEFT_NODE_TEX(LEFT, OPER, STREAM)                                     \
-    char MAKE_LEFT_NODE_TEX_MSG_[128];                                            \
+#define MAKE_LEFT_NODE_TEX(LEFT, OPER, STREAM)                                          \
+    char MAKE_LEFT_NODE_TEX_MSG_[128];                                                  \
     sprintf(MAKE_LEFT_NODE_TEX_MSG_, "Operation \'%c\' must have left operand!", OPER); \
     MAKE_NODE_TEX(LEFT, OPER, STREAM, MAKE_LEFT_NODE_TEX_MSG_);
 
-#define MAKE_RIGHT_NODE_TEX(RIGHT, OPER, STREAM)                                        \
-    char MAKE_RIGHT_NODE_TEX_MSG_[128];                                                 \
+#define MAKE_RIGHT_NODE_TEX(RIGHT, OPER, STREAM)                                              \
+    char MAKE_RIGHT_NODE_TEX_MSG_[128];                                                       \
     sprintf(MAKE_RIGHT_NODE_TEX_MSG_, "Binary operation \'%c\' must have 2 operands!", OPER); \
     MAKE_NODE_TEX(RIGHT, OPER, STREAM, MAKE_RIGHT_NODE_TEX_MSG_);
 

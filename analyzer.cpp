@@ -118,7 +118,7 @@ Node *Analyzer::GetT() {
 
 //Analyze sub-expression that contain power
 Node *Analyzer::GetPow() {
-    Node* val = GetB(); // Get (x)
+    Node* val = GetP(); // Get (x)
     Node* total;
 
     while(*s == '^') {
@@ -128,7 +128,7 @@ Node *Analyzer::GetPow() {
         }
         s++;
 
-        Node* val2 = GetB(); // Get (x)
+        Node* val2 = GetP(); // Get (x)
         if(val2 == NULL) {
             std::cerr << "Syntax error, expected correct expression after \'^\'!" << std::endl;
             delete val;
@@ -144,7 +144,7 @@ Node *Analyzer::GetPow() {
 }
 
 //Analyze sub-expression that contain braces (x)
-Node* Analyzer::GetB() {
+Node* Analyzer::GetP() {
     if(*s == '(') {
         s++;
         Node* val = GetE(); // Get x+y or x-y
@@ -163,7 +163,7 @@ Node* Analyzer::GetB() {
 }
 
 //Analyze sub-expression that MUST contain braces (x)
-Node* Analyzer::GetSB(const char* func_name) {
+Node* Analyzer::GetSP(const char* func_name) {
 
 
     if(*s++ != '(') {
@@ -194,10 +194,13 @@ Node* Analyzer::GetSB(const char* func_name) {
 Node* Analyzer::GetVN() {
     Node *val1  = NULL,
           *val2 = NULL;
-    if((val1 = GetSC()) != NULL) // Get sin(x) or cos(x)
+    if((val1 = GetSin()) != NULL) // Get sin(x)
         return val1;
 
-    if((val1 = GetL()) != NULL) // Get ln(x)
+    if((val1 = GetCos()) != NULL) // Get cos(x)
+        return val1;
+
+    if((val1 = GetL()) != NULL)  // Get ln(x)
         return val1;
 
     if((val1 = GetN()) != NULL) {     // Get const
@@ -214,46 +217,77 @@ Node* Analyzer::GetVN() {
         return GetV(); //Get var
 }
 
-//Analyze sub-expression that contain sin() or cos() function
-Node* Analyzer::GetSC() {
+Node* Analyzer::GetSin() {
     Node* val;
-    char id;
-    if(strncmp(s, "sin", 3) == 0) {
+    if(strncmp(s, "sin", 3) == 0)
         s += 3;
-        id = 's';
-    }
-    else if(strncmp(s, "cos", 3) == 0) {
-        s += 3;
-        id = 'c';
-    }
     else return NULL;
-    //MyAssert(*s == '(');
-    //s++;
-    if(*s++ != '(') {
-        if(id == 's')
-            fprintf(stderr, "Syntax error, expected /'(/' after sin!\n");
-        else
-            fprintf(stderr, "Syntax error, expected /'(/' after cos!\n");
-    }
 
-    val = GetE(); //Get x+y or x-y
-    if(val == NULL) {
-        if(id == 's')
-            fprintf(stderr, "Syntax error, expected correct expression after \"sin(\"!\n");
-        else
-            fprintf(stderr, "Syntax error, expected correct expression after \"cos(\"!\n");
+    val = GetSP("sin"); //Get (...) or (...)
+    if(val == nullptr)
+        return nullptr;
 
-    }
-
-    if(*s++ != ')') {
-        if(id == 's')
-            fprintf(stderr, "Syntax error, expected /')/' after sin!\n");
-        else
-            fprintf(stderr, "Syntax error, expected /')/' after cos!\n");
-    }
-    Node* val2 = new Node(OP, id, val);
+    Node* val2 = new Node(OP, 's', val);
     return val2;
 }
+
+Node* Analyzer::GetCos() {
+    Node* val;
+    if(strncmp(s, "cos", 3) == 0)
+        s += 3;
+    else
+        return NULL;
+
+    val = GetSP("cos"); //Get (...) or (...)
+    if(val == nullptr) {
+        s -= 3;
+        return nullptr;
+    }
+
+    Node* val2 = new Node(OP, 'c', val);
+    return val2;
+}
+
+//Analyze sub-expression that contain sin() or cos() function
+//Node* Analyzer::GetSC() {
+//    Node* val;
+//    char id;
+//    if(strncmp(s, "sin", 3) == 0) {
+//        s += 3;
+//        id = 's';
+//    }
+//    else if(strncmp(s, "cos", 3) == 0) {
+//        s += 3;
+//        id = 'c';
+//    }
+//    else return NULL;
+//    //MyAssert(*s == '(');
+//    //s++;
+//    if(*s++ != '(') {
+//        if(id == 's')
+//            fprintf(stderr, "Syntax error, expected /'(/' after sin!\n");
+//        else
+//            fprintf(stderr, "Syntax error, expected /'(/' after cos!\n");
+//    }
+
+//    val = GetE(); //Get x+y or x-y
+//    if(val == NULL) {
+//        if(id == 's')
+//            fprintf(stderr, "Syntax error, expected correct expression after \"sin(\"!\n");
+//        else
+//            fprintf(stderr, "Syntax error, expected correct expression after \"cos(\"!\n");
+
+//    }
+
+//    if(*s++ != ')') {
+//        if(id == 's')
+//            fprintf(stderr, "Syntax error, expected /')/' after sin!\n");
+//        else
+//            fprintf(stderr, "Syntax error, expected /')/' after cos!\n");
+//    }
+//    Node* val2 = new Node(OP, id, val);
+//    return val2;
+//}
 
 // Analyze sub-expression, that contatin ln() function
 Node *Analyzer::GetL() {
@@ -264,15 +298,22 @@ Node *Analyzer::GetL() {
     else
         return NULL;
 
-    if(*s++ != '(')
-        fprintf(stderr, "Syntax error, expected /'(/' after ln!\n");
+    val = GetSP("ln");
 
-    val = GetE(); //Get x+y or x-y
-    if(val == NULL)
-        fprintf(stderr, "Syntax error, expected correct expression after \"ln(\"!\n");
+    if(val == NULL) {
+        s -= 2;
+        return NULL;
+    }
 
-    if(*s++ != ')')
-        fprintf(stderr, "Syntax error, expected /')/' after ln!\n");
+//    if(*s++ != '(')
+//        fprintf(stderr, "Syntax error, expected /'(/' after ln!\n");
+
+//    val = GetE(); //Get x+y or x-y
+//    if(val == NULL)
+//        fprintf(stderr, "Syntax error, expected correct expression after \"ln(\"!\n");
+
+//    if(*s++ != ')')
+//        fprintf(stderr, "Syntax error, expected /')/' after ln!\n");
     Node* val2 = new Node(OP, 'l', val);
     return val2;
 }

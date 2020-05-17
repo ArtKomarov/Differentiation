@@ -456,25 +456,49 @@ nod_val Node::TreeCount(nod_val var) {
 }
 
 // Used to make tex file with expression
-int Node::MakeTex (const char* FileName) {
+// If completed == true (default), then the full structure of the tex file is built
+int Node::MakeTex (const char* FileName, bool completed) {
     assert(FileName != NULL);
 
-    std::ofstream out(FileName);
+    std::ofstream out;
+    if(completed)
+        out.open(FileName);
+    else
+        out.open(FileName, std::ios::app);
     if(!out) {
         std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
         return -1;
     }
 
-    out << TEX_HEADER;
+    if(completed)
+        out << TEX_HEADER;
 
     this->Node::MakeTexNode(out);
-    out << TEX_END_DOCUMENT;
-    //fclose(fd);
-    //out.close();
+    if(completed)
+        out << TEX_END_DOCUMENT;
     return 0;
 }
 
-// Support recursive function, used in Node::MakeTex, prints node and his children to ifstream out
+// Used to make tex file with expression
+// Prints to out incomplete tex code (without TEX_HEADER and TEX_END_DOCUMENT)
+int Node::MakeTex (std::ofstream& out, bool completed) {
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    if(completed)
+        out << TEX_HEADER;
+
+    this->Node::MakeTexNode(out);
+
+    if(completed)
+        out << TEX_END_DOCUMENT;
+    return 0;
+}
+
+// Support recursive function, used in Node::MakeTex,
+//prints node and his children to ifstream out
 int Node::MakeTexNode (std::ofstream& out) {
     if(!out) {
         std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
@@ -487,7 +511,7 @@ int Node::MakeTexNode (std::ofstream& out) {
         switch (val_char) {
         case '+':
         case '-':
-            char oper[3];
+            char oper[3]; // 'operand' + maybe '(' + '\0'
             if(right_) {
                 sprintf(oper, "%c", val_char);
                 if(this->MakeBinaryNodeTex(out, val_char, "", oper) == -1)
@@ -531,7 +555,6 @@ int Node::MakeTexNode (std::ofstream& out) {
             if(this->MakeUnaryNodeTex(out, val_char, "\\ln(", ")") == -1)
                 return -1;
             break;
-
         default:
             left_->MakeTexNode(out);
             out << val_char;
@@ -882,4 +905,34 @@ int Node::Optimization() {
     return val_;
 }
 
+int Node::DiffTex (const char* FileName, bool optim) {
+    assert(FileName != NULL);
+
+    std::ofstream out(FileName);
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    if(optim)
+        this->Optimization();
+
+    Node* diff = this->Diff();
+    if(diff == NULL)
+        return -1;
+
+    if(optim)
+        diff->Optimization();
+
+    out << TEX_HEADER << "(\\;";
+    if(this->MakeTex(out) == -1)
+        return -1;
+
+    out << "\\;)' = ";
+
+    if(diff->MakeTex(out) == -1)
+        return -1;
+    out << TEX_END_DOCUMENT;
+    return 0;
+}
 

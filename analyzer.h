@@ -25,20 +25,20 @@ public:
     Analyzer(char* input);
     ~Analyzer();
 
-    Node* GetG();
-    Node* GetN();
-    Node* GetE();
-    Node* GetT();
-    Node* GetB();
-    Node* GetV();
-    Node* GetVN();
-    Node* GetSin();
-    Node* GetCos();
-    Node* GetSC();
-    Node* GetPow();
-    Node* GetL();
+    Node* GetG();   // Get full expression
+    Node* GetN();   // Get number
+    Node* GetE();   // Get addition or subtraction
+    Node* GetT();   // Get multiplication ot division
+    Node* GetP();   // Get parenthesis
+    Node* GetV();   // Get variable
+    Node* GetVN();  // Get variable + number
+    Node* GetSin(); // Get sin
+    Node* GetCos(); // Get cos
+    Node* GetSC();  // Get sin or cos
+    Node* GetPow(); // Get power
+    Node* GetL();   // Get ln
 
-    Node* GetSB(const char* func_name);
+    Node* GetSP(const char* func_name); //Get strict parenthesis
 
 };
 
