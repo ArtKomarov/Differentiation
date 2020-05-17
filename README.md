@@ -1,6 +1,6 @@
 # Differentiation
 ## Main functions
-+ You can analyze syntax of expression (is the expression correctness)
++ You can analyze syntax of expression (expression correctness)
 + You can calculate value of the expression.
 + You can differentiate the expression.
 + You can visualize an expression as a tree graph
