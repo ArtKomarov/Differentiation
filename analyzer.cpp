@@ -51,7 +51,7 @@ Node* Analyzer::GetG() {
     Node *val = GetE(); //Get x+y or x-y
 
     if(val != NULL && (*s != '\n') && (*s != '\0'))
-        std::cerr << "Syntax error: the expression was expected to end, but a " << *s << " was found!" << std::endl;
+        std::cerr << "Syntax error: the expression was expected to end, but a \'" << *s << "\' was found!" << std::endl;
     return val;
 }
 

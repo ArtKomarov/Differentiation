@@ -12,6 +12,14 @@
 // Used to make graph by graphwiz
 const char GraphHeader[] = "digraph G{\n "
                            "node [style=\"filled\", fillcolor=\"orange\", fontcolor=\"blue\"];\n";
+const char TEX_HEADER[]  = "\\documentclass[14pt]{article}\n"
+       "\\usepackage{fancyhdr}\n"
+       "\\usepackage[utf8]{inputenc}\n"
+       "\\setlength{\\parindent}{-3ex}"
+       "\\begin{document}\n $";
+const char TEX_END_DOCUMENT[] = "$\\end{document}";
+
+const size_t MAX_DIVIDEND_LEN = 15;
 
 // Node::Constructor == Node::Node
 //Free construtor
@@ -205,23 +213,25 @@ int Node::FPrintGraphNode(std::ofstream& out) {
     long leftid  = 0;
     long rightid = 0;
     if(left_ != NULL) {
-        leftid = left_ - (Node*)0x0;
+        leftid = left_ - (Node*)0x0;   // down
         out << leftid <<" [label = ";
         if(left_->type_ == NUM) {
             out << "\"" << left_->val_ <<"\"]\n";
         }
         else
-            out << "\"" << left_->val_ << "\"]\n";
+            out << "\"" << static_cast<char>(left_->val_) << "\"]\n";
         out << id << " -> " << leftid << "\n";
     }
     if(right_ != NULL) {
         rightid = right_ - (Node*)0x0;
         out << rightid << " [label = ";
+
         if(right_->type_ == NUM) {
             out << "\"" << right_->val_ << "\"]\n";
         }
         else
-            out << "\"" << right_->val_ << "\"]\n";
+            out << "\"" << static_cast<char>(right_->val_) << "\"]\n";
+
         out << id <<" -> " << rightid << "\n";
     }
     if(left_ != NULL)
@@ -248,7 +258,8 @@ int Node::MakeGraphFile(const char* FileName) {
         out << "\"" << val_ << "\"]\n";
     }
     else
-        out << "\"" << val_ << "\"]\n";
+        out << "\"" << static_cast<char>(val_) << "\"]\n";
+
     this->Node::FPrintGraphNode(out);
     out << "}\n";
     //fclose(fd);
@@ -317,7 +328,7 @@ void Node::TreeConstruct(const char* filename) {
     if(!in.good())
         return;
     in >> val_;
-    
+
 //    if(fscanf(fd, "%d%d", &type_, &val_) == EOF) {
 //        fclose(fd);
 //        return;
@@ -345,7 +356,7 @@ int Node::FScanNode(char* CurStr, std::ifstream& in) {
             return 0;
         else {
             left_ = new Node;
-            sscanf(CurStr + 1, "%d%d", &left_->type_, &left_->val_);
+            sscanf(CurStr + 1, "%d%lf", &left_->type_, &left_->val_);
             if(left_->Node::FScanNode(CurStr, in) == -1)
                 return -1;
 
@@ -357,7 +368,7 @@ int Node::FScanNode(char* CurStr, std::ifstream& in) {
             }
             else {
                 right_ = new Node;
-                sscanf(CurStr + 1, "%d%d", &right_->type_, &right_->val_);
+                sscanf(CurStr + 1, "%d%lf", &right_->type_, &right_->val_);
 
                 if(right_->Node::FScanNode(CurStr, in) == -1) return -1;
                 if(CurStr[0] != ')') {
@@ -373,7 +384,7 @@ int Node::FScanNode(char* CurStr, std::ifstream& in) {
 }
 
 // Calculate number of nodes in tree, started by this root (used by destructor)
-int Node::NumberOfNodes() {
+size_t Node::NumberOfNodes() {
     int i = 0;
     if(left_ != NULL)
         i += left_->NumberOfNodes();
@@ -384,16 +395,17 @@ int Node::NumberOfNodes() {
 
 // Calculate expression, that contain in this tree
 nod_val Node::TreeCount(nod_val var) {
+    const char ERROR_MSG[] = "There is broken tree after operation \'";
     switch(type_) {
     case OP:
         if(left_ == NULL) {
-            fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
+            std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             return 0;
         }
         switch(static_cast<char>(val_)) {
         case '+':
             if(right_ == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
+                std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return left_->TreeCount(var) + right_->TreeCount(var);
         case '-':
@@ -404,17 +416,17 @@ nod_val Node::TreeCount(nod_val var) {
             return left_->TreeCount(var) - right_->TreeCount(var);
         case '*':
             if(right_ == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
+                std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return left_->TreeCount(var) * right_->TreeCount(var);
         case '/':
             if(right_ == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
+                std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return left_->TreeCount(var) / right_->TreeCount(var);
         case '^':
             if(right_ == NULL) {
-                fprintf(stderr, "There is broken tree after operation \"%c\"!\n", val_);
+                std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return (nod_val) pow(left_->TreeCount(var), right_->TreeCount(var));
         case 's':
@@ -424,7 +436,7 @@ nod_val Node::TreeCount(nod_val var) {
         case 'l':
             return (nod_val) log(left_->TreeCount(var));
         default:
-            fprintf(stderr, "There is broken tree, unknown operation \"%c\"!\n", val_);
+            std::cerr << "There is broken tree, unknown operation \'" << static_cast<char>(val_) << "\'!" << std::endl;
             return 0;
         }
         break;
@@ -441,6 +453,120 @@ nod_val Node::TreeCount(nod_val var) {
         fprintf(stderr, "There is broken tree, unknown type number \"%d\"!\n", type_);
         return 0;
     }
+}
+
+// Used to make tex file with expression
+int Node::MakeTex (const char* FileName) {
+    assert(FileName != NULL);
+
+    std::ofstream out(FileName);
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    out << TEX_HEADER;
+
+    this->Node::MakeTexNode(out);
+    out << TEX_END_DOCUMENT;
+    //fclose(fd);
+    //out.close();
+    return 0;
+}
+
+// Support recursive function, used in Node::MakeTex, prints node and his children to ifstream out
+int Node::MakeTexNode (std::ofstream& out) {
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    switch(type_) {
+    case OP: {
+        char val_char = static_cast<char>(val_);
+        switch (val_char) {
+        case '+':
+        case '-':
+            char oper[3];
+            if(right_) {
+                sprintf(oper, "%c", val_char);
+                if(this->MakeBinaryNodeTex(out, val_char, "", oper) == -1)
+                    return -1;
+            }
+            else {
+                sprintf(oper, "%c(", val_char);
+                if(this->MakeUnaryNodeTex(out, val_char, oper, ")") == -1)
+                    return -1;
+            }
+            break;
+        case '*':
+            if(this->MakeBinaryNodeTex(out, val_char, "(", ") \\cdot (", ")") == -1)
+                return -1;
+            break;
+        case '/':
+            //Если будет длинная дробь, она не влезет на страницу,
+            // поэтому используем \frac{}{} только для не большой глубины дерева (<= MAX_DIVIDEND_LEN)
+            if(this->NumberOfNodes() <= MAX_DIVIDEND_LEN) {
+                if(this->MakeBinaryNodeTex(out, val_char, "\\frac{", "}{", "}") == -1)
+                    return -1;
+            }
+            else {
+                if(this->MakeBinaryNodeTex(out, val_char, "(", ")/(", ")") == -1)
+                    return -1;
+            }
+            break;
+        case '^':
+            if(this->MakeBinaryNodeTex(out, val_char, "", "^{", "}") == -1)
+                return -1;
+            break;
+        case 's':
+            if(this->MakeUnaryNodeTex(out, val_char, "\\sin(", ")") == -1)
+                return -1;
+            break;
+        case 'c':
+            if(this->MakeUnaryNodeTex(out, val_char, "\\cos(", ")") == -1)
+                return -1;
+            break;
+        case 'l':
+            if(this->MakeUnaryNodeTex(out, val_char, "\\ln(", ")") == -1)
+                return -1;
+            break;
+
+        default:
+            left_->MakeTexNode(out);
+            out << val_char;
+            right_->MakeTexNode(out);
+            break;
+        }
+        break;
+    }
+    case NUM:
+        out << val_;
+        break;
+    case VAR:
+        out << static_cast<char>(val_);
+        break;
+    default:
+        std::cerr << __PRETTY_FUNCTION__<< ": " << "Unknown type of node!";
+        return -1;
+    }
+    return 0;
+}
+
+int Node::MakeBinaryNodeTex(std::ofstream& out, char val_char, const char *left, const char *center, const char *right) {
+    out << left;
+    MAKE_LEFT_NODE_TEX (left_,  val_char, out);
+    out << center;
+    MAKE_RIGHT_NODE_TEX(right_, val_char, out);
+    out << right;
+    return 0;
+}
+
+int Node::MakeUnaryNodeTex(std::ofstream& out, char val_char, const char *left, const char *right) {
+    out << left;
+    MAKE_LEFT_NODE_TEX(left_, val_char, out);
+    out << right;
+    return 0;
 }
 
 // Operations with nodes
@@ -557,13 +683,13 @@ Node* Node::Diff() {
         break;
     case 'l': // ln(x)' = (1/x) * x'
         if(left_ == NULL) {
-            fprintf(stderr, "Diff: Left child does not exists for /'ln/'!\n");
+            std::cerr << __PRETTY_FUNCTION__ << ": Left child does not exists for \"ln\"!" << std::endl;
             return this->NodeCopy();
         }
-        return new Node(OP, '/', left_->Diff(), this->NodeCopy());
+        return new Node(OP, '/', left_->Diff(), left_->NodeCopy());
         break;
     default:
-        fprintf(stderr, "Diff: Unknown operation \"%c\"!\n", val_);
+        std::cerr << __PRETTY_FUNCTION__ << ": Unknown operation \'" << val_ << "\'!" << std::endl;
         return NULL;
         break;
     }
@@ -596,7 +722,7 @@ int Node::Optimization() {
                 this->NodeSet(NUM, 0);
                 return 0;
             }
-            else if(RightVal == 0) {
+            else if(RightVal == 0 && right_ != NULL) {
                 delete right_;
                 right_ = NULL;
                 this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
@@ -608,12 +734,18 @@ int Node::Optimization() {
             }
             else if(LeftVal == 0) {
                 delete left_;
+
+                if(val_ == '-') {
+                    left_ = right_;
+                    right_ = NULL;
+                    return val_;
+                }
+
                 left_ = NULL;
-                if(val_ == '-')
-                    return '-';
                 this->NodeSet(right_->type_, right_->val_, right_->left_, right_->right_);
                 Right->left_  = NULL;
                 Right->right_ = NULL;
+
                 delete Right;
                 Right = NULL;
                 return val_;
@@ -660,7 +792,7 @@ int Node::Optimization() {
             break;
         case '/':
             if(RightVal == 0) {
-                fprintf(stderr, "В дереве есть деление на ноль!\n");
+                std::cerr << "The tree has a division by 0!" << std::endl;
                 return '/';
             }
             else if(LeftVal == 0) {
@@ -705,7 +837,7 @@ int Node::Optimization() {
         case '^':
             if(LeftVal == 0) {
                 if(RightVal < 0) {
-                    fprintf(stderr, "В дереве есть деление на 0!\n");
+                    std::cerr << "The tree has a division by 0!" << std::endl;
                     return '^';
                 }
                 else {
@@ -739,13 +871,13 @@ int Node::Optimization() {
         case 'l':
             return val_;
         default:
-            fprintf(stderr, "Unknown operation %c!\n", val_);
+            std::cerr << "Unknown operation \'" << val_ << "\'!" << std::endl;
             break;
         }
         break;
     }
     default:
-        fprintf(stderr, "Optimization: Unknown type \"%d\"!\n", type_);
+        std::cerr << "Optimization: Unknown type \'" << type_ << "\'!" << std::endl;
     }
     return val_;
 }
