@@ -28,7 +28,6 @@
 //        fprintf(stderr, "Ошибка, ожидалась скобка! (символ \"(\" или \")\", зависит от контекста)\n");
 //}
 
-//public
 // Constructor
 Analyzer::Analyzer(char* s) {
     assert(s != NULL);
@@ -46,8 +45,20 @@ Analyzer::~Analyzer() {
     this->tree = NULL;
 }
 
+int Analyzer::SkipSpaces() {
+    if(s == nullptr) {
+        std::cerr << "Analyzed string is nullptr!" << std::endl;
+        return -1;
+    }
+    while(*s == ' ')
+        s++;
+    return 0;
+}
+
 // Analyze expression, that must contain last symbol #
 Node* Analyzer::GetG() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node *val = GetE(); //Get x+y or x-y
 
     if(val != NULL && (*s != '\n') && (*s != '\0'))
@@ -57,6 +68,8 @@ Node* Analyzer::GetG() {
 
 //Analyze sub-expression that contain addition or subtractin
 Node *Analyzer::GetE() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node* val = GetT(); // Get x*y or x/y // May be NULL in case of unary operator '-'
     Node* total;
 
@@ -89,6 +102,8 @@ Node *Analyzer::GetE() {
 
 //Analyze sub-expression that contain multiplication or division
 Node *Analyzer::GetT() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node* val = GetPow(); // Get x^y
     Node* total;
 
@@ -118,6 +133,8 @@ Node *Analyzer::GetT() {
 
 //Analyze sub-expression that contain power
 Node *Analyzer::GetPow() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node* val = GetP(); // Get (x)
     Node* total;
 
@@ -145,6 +162,8 @@ Node *Analyzer::GetPow() {
 
 //Analyze sub-expression that contain braces (x)
 Node* Analyzer::GetP() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     if(*s == '(') {
         s++;
         Node* val = GetE(); // Get x+y or x-y
@@ -164,7 +183,8 @@ Node* Analyzer::GetP() {
 
 //Analyze sub-expression that MUST contain braces (x)
 Node* Analyzer::GetSP(const char* func_name) {
-
+    if(this->SkipSpaces() == -1)
+        return nullptr;
 
     if(*s++ != '(') {
         std::cerr << "Syntax error, expected \'(\' after "
@@ -192,6 +212,8 @@ Node* Analyzer::GetSP(const char* func_name) {
 
 //Analyze sub-expression that contain sin/cos, variable or constant (or const * var)
 Node* Analyzer::GetVN() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node *val1  = NULL,
           *val2 = NULL;
     if((val1 = GetSin()) != NULL) // Get sin(x)
@@ -218,6 +240,8 @@ Node* Analyzer::GetVN() {
 }
 
 Node* Analyzer::GetSin() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node* val;
     if(strncmp(s, "sin", 3) == 0)
         s += 3;
@@ -232,6 +256,8 @@ Node* Analyzer::GetSin() {
 }
 
 Node* Analyzer::GetCos() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node* val;
     if(strncmp(s, "cos", 3) == 0)
         s += 3;
@@ -291,6 +317,8 @@ Node* Analyzer::GetCos() {
 
 // Analyze sub-expression, that contatin ln() function
 Node *Analyzer::GetL() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     Node* val;
     if(strncmp("ln", s, 2) == 0) {
         s += 2;
@@ -320,6 +348,8 @@ Node *Analyzer::GetL() {
 
 // Analyze sub-expression, that contain constant value
 Node* Analyzer::GetN() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     nod_val val   = 0;
     char   *start = s;
 
@@ -345,6 +375,8 @@ Node* Analyzer::GetN() {
 
 //Analyze sub-expression that contain variable (var = x)
 Node* Analyzer::GetV() {
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     char *start = s;
     if(this->varstr == "") {
         while((*s >= 'A' && *s <= 'Z') || (*s >= 'a' && *s <= 'z') || (*s == '_')) {

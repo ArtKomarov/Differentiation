@@ -54,7 +54,6 @@ public:
 
     void    TreeConstruct   (const char* filename);
     int     FScanNode       (char* CurStr, std::ifstream& fd);
-    void    SkipSpaces      ();
 
     size_t  NumberOfNodes   ();
     nod_val TreeCount       (nod_val var);
