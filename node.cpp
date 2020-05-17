@@ -12,11 +12,15 @@
 // Used to make graph by graphwiz
 const char GraphHeader[] = "digraph G{\n "
                            "node [style=\"filled\", fillcolor=\"orange\", fontcolor=\"blue\"];\n";
-const char TEX_HEADER[]  = "\\documentclass[14pt]{article}\n"
+const char TEX_HEADER[]  =
+       "\\documentclass[14pt]{article}\n"
        "\\usepackage{fancyhdr}\n"
        "\\usepackage[utf8]{inputenc}\n"
-       "\\setlength{\\parindent}{-3ex}"
-       "\\begin{document}\n $";
+       "\\usepackage[russian]{babel}\n"
+       "\\begin{document}\n "
+       "\\pagestyle{fancy}\n"
+       "\\fancyhead[R]{Acronis}\n"
+       "\\fancyhead[L]{\"Утрем нос Стивену Вольфраму!\"}\n $";
 const char TEX_END_DOCUMENT[] = "$\\end{document}";
 
 const size_t MAX_DIVIDEND_LEN = 15;
@@ -549,10 +553,20 @@ int Node::MakeTexNode (std::ofstream& out) {
                     return -1;
             }
             break;
-        case '^':
-            if(this->MakeBinaryNodeTex(out, val_char, "", "^{", "}") == -1)
+        case '^': { // К сожалению, тоже ставим скобки т.к. a^b^c - latex fail
+            if(left_->type_ != OP && right_->type_ != OP) { // кроме самого простого случая
+                if(this->MakeBinaryNodeTex(out, val_char, "", "^{", "}") == -1)
+                    return -1;
+                break;
+            }
+            char center[8];
+            sprintf(center, "%s^{%s", brace[1], brace[0]);
+            char right[8];
+            sprintf(right, "%s}", brace[1]);
+            if(this->MakeBinaryNodeTex(out, val_char, brace[0], center, right) == -1)
                 return -1;
             break;
+        }
         case 's': {
             char lef[8];
             sprintf(lef, "\\sin%s", brace[0]);
