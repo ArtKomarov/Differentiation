@@ -25,6 +25,8 @@ public:
     Analyzer(char* input);
     ~Analyzer();
 
+    int SkipSpaces();
+
     Node* GetG();   // Get full expression
     Node* GetN();   // Get number
     Node* GetE();   // Get addition or subtraction
