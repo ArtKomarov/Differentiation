@@ -22,7 +22,7 @@ private:
     //void  MyAssert(bool b);
 public:
     Node* tree;
-    Analyzer(char* input);
+    Analyzer(const char* input);
     ~Analyzer();
 
     int SkipSpaces();

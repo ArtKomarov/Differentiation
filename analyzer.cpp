@@ -7,30 +7,9 @@
 #include "diffconsts.h"
 #include "analyzer.h"
 
-//private
-/*Node* Analyzer::OpUnion(Node* nod1, Node* nod2, char op) {
-    assert(nod1  != NULL);
-    assert(nod2  != NULL);
-    Node* total  = new Node(OP, op, nod1, nod2);
-    //total->Construct(OP, op, nod1, nod2);
-    return total;
-}*/
-
-/*Node* Analyzer::OpUnion(Node* nod1, char op) {
-    assert(nod1  != NULL);
-    Node* total  = new Node(OP, op, nod1);
-    //total->Construct(OP, op, nod1);
-    return total;
-}*/
-
-//void Analyzer::MyAssert(bool b) {
-//    if(!b)
-//        fprintf(stderr, "Ошибка, ожидалась скобка! (символ \"(\" или \")\", зависит от контекста)\n");
-//}
-
 // Constructor
-Analyzer::Analyzer(char* s) {
-    assert(s != NULL);
+Analyzer::Analyzer(const char* s) {
+    assert(s != nullptr);
     this->s = strdup(s);
     this->slen = (int) strlen(s);
     this->tree = this->GetG(); // Analyze expression
@@ -40,9 +19,9 @@ Analyzer::Analyzer(char* s) {
 Analyzer::~Analyzer() {
     while(*s != '\0') s++;
     free(this->s - this->slen);
-    this->s = NULL;
+    this->s = nullptr;
     delete this->tree;
-    this->tree = NULL;
+    this->tree = nullptr;
 }
 
 int Analyzer::SkipSpaces() {
@@ -62,7 +41,7 @@ Node* Analyzer::GetG() {
     Node *val = GetE(); //Get x+y or x-y
     if(this->SkipSpaces() == -1)
         return nullptr;
-    if(val != NULL && (*s != '\n') && (*s != '\0'))
+    if(val != nullptr && (*s != '\n') && (*s != '\0'))
         std::cerr << "Syntax error: the expression was expected to end, but a \'" << *s << "\' was found!" << std::endl;
     return val;
 }
@@ -79,20 +58,20 @@ Node *Analyzer::GetE() {
         s++;
         Node* val2 = GetT(); // Get x*y or x/y
 
-        if(val2 == NULL) {
+        if(val2 == nullptr) {
             std::cerr << "Syntax error: expected correct expression after /'" << oper << "/'!" << std::endl;
-            if(val != NULL) delete val;
-            return NULL;
+            if(val != nullptr) delete val;
+            return nullptr;
         }
 
-        if(oper == '-' && val == NULL)
+        if(oper == '-' && val == nullptr)
             total = new Node(OP, oper, val2);
-        else if(val != NULL)
+        else if(val != nullptr)
             total = new Node(OP, oper, val, val2);
         else {
             std::cerr << "Syntax error: expected correct expression before /'+/'!" << std::endl;
-            if(val != NULL) delete val;
-            return NULL;
+            if(val != nullptr) delete val;
+            return nullptr;
         }
 
         val = total; // Collect result
@@ -112,20 +91,20 @@ Node *Analyzer::GetT() {
 
 
     while(*s == '*' || *s == '/') {
-        if(val == NULL) {
+        if(val == nullptr) {
             std::cerr << "Syntax error: expected correct expression before \'"
                       << *s << "\'!" << std::endl;
-            return NULL;
+            return nullptr;
         }
         char oper = *s++;
 
         Node* val2 = GetPow(); //Get x^y
 
-        if(val2 == NULL) {
+        if(val2 == nullptr) {
             std::cerr << "Syntax error: expected correct expression before \'"
                       << *s << "\'!" << std::endl;
-            if(val != NULL) delete val;
-            return NULL;
+            if(val != nullptr) delete val;
+            return nullptr;
         }
 
         total = new Node(OP, oper, val, val2);
@@ -144,18 +123,18 @@ Node *Analyzer::GetPow() {
     Node* total;
 
     while(*s == '^') {
-        if(val == NULL) {
+        if(val == nullptr) {
             std::cerr << "Syntax error, expected correct expression before \'^\'!" << std::endl;
-            return NULL;
+            return nullptr;
         }
         s++;
 
         Node* val2 = GetP(); // Get (x)
-        if(val2 == NULL) {
+        if(val2 == nullptr) {
             std::cerr << "Syntax error, expected correct expression after \'^\'!" << std::endl;
             delete val;
-            val = NULL;
-            return NULL;
+            val = nullptr;
+            return nullptr;
         }
 
         total = new Node(OP, '^', val, val2);
@@ -175,9 +154,9 @@ Node* Analyzer::GetP() {
         s++;
         Node* val = GetE(); // Get x+y or x-y
 
-        if(val == NULL) { //expresion
+        if(val == nullptr) { //expresion
             std::cerr << "Syntax error, expected expresion after \'(\'!" << std::endl;
-            return NULL;
+            return nullptr;
         }
 
         if(*s++ != ')')
@@ -201,7 +180,7 @@ Node* Analyzer::GetSP(const char* func_name) {
 
     Node* val = GetE(); // Get x+y or x-y
 
-    if(val == NULL) { //expresion
+    if(val == nullptr) { //expresion
         std::cerr << "Syntax error, expected expresion after \""
                   << func_name << "(\" !" << std::endl;
         return nullptr;
@@ -223,19 +202,19 @@ Node* Analyzer::GetSP(const char* func_name) {
 Node* Analyzer::GetVN() {
     if(this->SkipSpaces() == -1)
         return nullptr;
-    Node *val1  = NULL,
-          *val2 = NULL;
-    if((val1 = GetSin()) != NULL) // Get sin(x)
+    Node *val1  = nullptr,
+          *val2 = nullptr;
+    if((val1 = GetSin()) != nullptr) // Get sin(x)
         return val1;
 
-    if((val1 = GetCos()) != NULL) // Get cos(x)
+    if((val1 = GetCos()) != nullptr) // Get cos(x)
         return val1;
 
-    if((val1 = GetL()) != NULL)  // Get ln(x)
+    if((val1 = GetL()) != nullptr)  // Get ln(x)
         return val1;
 
-    if((val1 = GetN()) != NULL) {     // Get const
-        if((val2 = GetV()) != NULL) { // Get var
+    if((val1 = GetN()) != nullptr) {     // Get const
+        if((val2 = GetV()) != nullptr) { // Get var
             Node* total;
             total = new Node(OP, '*', val1, val2); // It means, that 5x -> 5 * x
             if(this->SkipSpaces() == -1)
@@ -258,7 +237,7 @@ Node* Analyzer::GetSin() {
     Node* val;
     if(strncmp(s, "sin", 3) == 0)
         s += 3;
-    else return NULL;
+    else return nullptr;
 
     val = GetSP("sin"); //Get (...) or (...)
     if(val == nullptr)
@@ -277,7 +256,7 @@ Node* Analyzer::GetCos() {
     if(strncmp(s, "cos", 3) == 0)
         s += 3;
     else
-        return NULL;
+        return nullptr;
 
     val = GetSP("cos"); //Get (...) or (...)
     if(val == nullptr) {
@@ -341,24 +320,15 @@ Node *Analyzer::GetL() {
         s += 2;
     }
     else
-        return NULL;
+        return nullptr;
 
     val = GetSP("ln");
 
-    if(val == NULL) {
+    if(val == nullptr) {
         s -= 2;
-        return NULL;
+        return nullptr;
     }
 
-//    if(*s++ != '(')
-//        fprintf(stderr, "Syntax error, expected /'(/' after ln!\n");
-
-//    val = GetE(); //Get x+y or x-y
-//    if(val == NULL)
-//        fprintf(stderr, "Syntax error, expected correct expression after \"ln(\"!\n");
-
-//    if(*s++ != ')')
-//        fprintf(stderr, "Syntax error, expected /')/' after ln!\n");
     Node* val2 = new Node(OP, 'l', val);
     if(this->SkipSpaces() == -1)
         return nullptr;
@@ -386,7 +356,7 @@ Node* Analyzer::GetN() {
         }
     }
 
-    if(start == s) return NULL;
+    if(start == s) return nullptr;
 
     Node* res = new Node(NUM, val);
     if(this->SkipSpaces() == -1)
@@ -409,8 +379,8 @@ Node* Analyzer::GetV() {
         int i = 0;
         while((*s >= 'A' && *s <= 'Z') || (*s >= 'a' && *s <= 'z') || (*s == '_')) {
             if(this->varstr[i] != *s) {
-                fprintf(stderr, "Our analyzer works only with 1 variable!\n");
-                return NULL;
+                std::cerr << "Analyzer works only with 1 variable!" << std::endl;
+                return nullptr;
             }
             i++;
             s++;
@@ -418,7 +388,7 @@ Node* Analyzer::GetV() {
     }
 
     if(start == s)
-        return NULL;
+        return nullptr;
     else {
         Node* n = new Node(VAR);
         if(this->SkipSpaces() == -1)

@@ -1,12 +1,13 @@
 #ifndef DIFFCONSTS_H
 #define DIFFCONSTS_H
 
-
+// Type for node value
 typedef double nod_val;
 
+// Buffer size for TreeConstruct (optional part)
 #define MAX_NAME_LEN 256
-#define MAX_NUM_OF_NODES 512
 
+// Possible node types
 enum {
     NUM = 1,
     VAR = 2,

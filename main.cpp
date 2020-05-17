@@ -16,7 +16,7 @@ const char SupDotFile[] = "Sup.dot";
 
 void SystemError(char arg[]) ;
 
-//x^3+cos(x+x^2) + ln(sin(x + 5) * cos(x^5)) + 10
+//x^3+cos(x+x^2) + ln(sin(x + 5) * cos(x^5)) + 10 + 23 / (x - x^7) / 50 * cos(x^6+x^5+x^4 + x^3 + x^2 + x + 1) + x^3+cos(x+x^2) + ln(sin(x + 5) * cos(x^5)) + 10 + 23 / (x - x^7) + x^7+x^9
 int main(int argc, char* argv[]) {
     //puts("To create a tree graph, enter the file name (.dot extension) as the first command line parameter.");
     puts("To differentiate, enter the support file name (.tex expression) as the first parametr of command line.");

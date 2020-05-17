@@ -51,7 +51,7 @@ Node::Node(int type, nod_val val) {
     default:
         type_ = type;
         val_  = val;
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
     }
 }
 
@@ -76,7 +76,7 @@ Node::Node(int type) {
     default:
         type_ = type;
         val_  = 0; //static_cast<nod_val>('U');
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
     }
 }
 
@@ -87,8 +87,8 @@ Node::Node(int type, nod_val val, Node* left, Node* right) {
         type_  = type;
         val_   = val;
 
-        if(left == NULL) {
-            std::cerr <<  __PRETTY_FUNCTION__ << ": left child of operation node is NULL!" << std::endl;
+        if(left == nullptr) {
+            std::cerr <<  __PRETTY_FUNCTION__ << ": left child of operation node is nullptr!" << std::endl;
             left_ = new Node(NUM, 0);
         }
         else
@@ -98,7 +98,7 @@ Node::Node(int type, nod_val val, Node* left, Node* right) {
         break;
     }
     case VAR: {
-        if(left != NULL || right != NULL)
+        if(left != nullptr || right != nullptr)
             std::cerr <<  __PRETTY_FUNCTION__ << " for operation used for variable!" << std::endl;
         NodeSet(type);
         break;
@@ -114,14 +114,14 @@ Node::Node(int type, nod_val val, Node* left, Node* right) {
         val_   = val;
         left_  = left;
         right_ = right;
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
     }
     }
 }
 
 // Construtor for unary operation nodes
 Node::Node(int type, nod_val val, Node* left) {
-    assert(left  != NULL);
+    assert(left  != nullptr);
     switch(type) {
     case OP: {
         type_  = type;
@@ -143,26 +143,26 @@ Node::Node(int type, nod_val val, Node* left) {
         type_  = type;
         val_   = val;
         left_  = left;
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
     }
 }
 
 // Recursive destructor
 Node::~Node() {
-    if(left_ != NULL) {
+    if(left_ != nullptr) {
         delete left_;
-        left_ = NULL;
+        left_ = nullptr;
     }
-    if(right_ != NULL) {
+    if(right_ != nullptr) {
         delete right_;
-        right_ = NULL;
+        right_ = nullptr;
     }
 }
 
 // Node fileds setter for numerical nodes
 void Node::NodeSet(int type, nod_val val) {
     if(type != OP && type != VAR && type != NUM)
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
 
     type_  = type;
     val_   = val;
@@ -171,7 +171,7 @@ void Node::NodeSet(int type, nod_val val) {
 // Node fileds setter for variable nodes
 void Node::NodeSet(int type) {
     if(type != OP && type != VAR && type != NUM)
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
 
     type_  = type;
     val_   = 'x';
@@ -180,7 +180,7 @@ void Node::NodeSet(int type) {
 // Node fileds setter for operation nodes
 void Node::NodeSet(int type, nod_val val, Node* left, Node* right) {
     if(type != OP && type != VAR && type != NUM)
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
     type_  = type;
     val_   = val;
     left_  = left;
@@ -190,7 +190,7 @@ void Node::NodeSet(int type, nod_val val, Node* left, Node* right) {
 // Node fileds setter for unary operation nodes
 void Node::NodeSet(int type, nod_val val, Node* left) {
     if(type != OP && type != VAR && type != NUM)
-        UNKNOWN_TYPE_MSG(type)
+        UnknownTypeMsg(type);
     type_  = type;
     val_   = val;
     left_  = left;
@@ -198,11 +198,11 @@ void Node::NodeSet(int type, nod_val val, Node* left) {
 
 // Recursive copy tree, whose root is this node
 Node* Node::NodeCopy() {
-    Node* left = NULL;
-    Node* right = NULL;
-    if(left_ != NULL)
+    Node* left = nullptr;
+    Node* right = nullptr;
+    if(left_ != nullptr)
         left = left_->NodeCopy();
-    if(right_ != NULL)
+    if(right_ != nullptr)
         right = right_->NodeCopy();
     return new Node(type_, val_, left, right);
 }
@@ -217,7 +217,7 @@ int Node::FPrintGraphNode(std::ofstream& out) {
     long id      = this - (Node*)0x0; // Unique id for every node, that helps building correct the graph
     long leftid  = 0;
     long rightid = 0;
-    if(left_ != NULL) {
+    if(left_ != nullptr) {
         leftid = left_ - (Node*)0x0;   // down
         out << leftid <<" [label = ";
         if(left_->type_ == NUM) {
@@ -227,7 +227,7 @@ int Node::FPrintGraphNode(std::ofstream& out) {
             out << "\"" << static_cast<char>(left_->val_) << "\"]\n";
         out << id << " -> " << leftid << "\n";
     }
-    if(right_ != NULL) {
+    if(right_ != nullptr) {
         rightid = right_ - (Node*)0x0;
         out << rightid << " [label = ";
 
@@ -239,16 +239,16 @@ int Node::FPrintGraphNode(std::ofstream& out) {
 
         out << id <<" -> " << rightid << "\n";
     }
-    if(left_ != NULL)
+    if(left_ != nullptr)
         left_->Node::FPrintGraphNode(out);
-    if(this->right_ != NULL)
+    if(this->right_ != nullptr)
         right_->Node::FPrintGraphNode(out);
     return 0;
 }
 
 //Making file, that used by graphwiz to build graph
 int Node::MakeGraphFile(const char* FileName) {
-    assert(FileName != NULL);
+    assert(FileName != nullptr);
 
     std::ofstream out(FileName);
     if(!out) {
@@ -272,128 +272,12 @@ int Node::MakeGraphFile(const char* FileName) {
     return 0;
 }
 
-// Support function for Node::SaveTree, prints node
-int Node::FPrintNode(std::ofstream& out) {
-    if(!out) {
-        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
-    }
-    //printf("%d %d\n", type_, val_);
-    out << type_ << " " << val_ << std::endl;
-    if(left_ != NULL) {
-        //printf("(");
-        out << "(";
-        left_->Node::FPrintNode(out);
-    }
-    if(right_ != NULL) {
-        //printf(",");
-        out << ",";
-        right_->Node::FPrintNode(out);
-        //printf(")\n");
-        out << ")\n";
-    }
-    else if(left_ != NULL) {
-        //printf(")\n");
-        out << ")\n";
-    }
-    return 0;
-}
-
-// Simple saving graph (expression) to file for future reset
-int Node::SaveTree(const char* filename) {
-    assert(filename != NULL);
-    std::ofstream out(filename);
-    if(!out) {
-        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
-        return -1;
-    }
-    
-    out << type_ << " " << val_ << std::endl;
-    out << type_ << " " << val_ << std::endl;
-    if(left_ != NULL)
-        left_->Node::FPrintNode(out);
-    if(right_ != NULL)
-        right_->Node::FPrintNode(out);
-    //fclose(fd);
-    return 0;
-}
-
-// Build tree from file
-void Node::TreeConstruct(const char* filename) {
-    assert(filename != NULL);
-    std::ifstream in(filename);
-    if(!in) {
-        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
-        return;
-    }
-    
-    left_  = NULL;
-    right_ = NULL;
-    
-    in >> type_;
-    if(!in.good())
-        return;
-    in >> val_;
-
-//    if(fscanf(fd, "%d%d", &type_, &val_) == EOF) {
-//        fclose(fd);
-//        return;
-//    }
-
-    char buff[MAX_NAME_LEN+1];
-    in.getline(buff, MAX_NAME_LEN); //fgets(buff, MAX_NAME_LEN, fd);
-
-    this->FScanNode(buff, in);
-    //fclose(fd);
-}
-
-//Support function for Node::TreeConstruct (scan node)
-int Node::FScanNode(char* CurStr, std::ifstream& in) {
-    assert(!in.fail()); //assert(fd  != NULL);
-    //char buff[MAX_NAME_LEN+1];
-    if(!in.getline(CurStr, MAX_NAME_LEN + 1) || CurStr[0] == '\n') { //fgets(CurStr, MAX_NAME_LEN + 1, fd) == NULL || CurStr[0] == '\n') {
-        return -1;
-    }
-    else {
-        int BuffLen = strlen(CurStr);
-        if(BuffLen > 0 && CurStr[BuffLen - 1] == '\n')
-            CurStr[BuffLen - 1] = '\0';
-        if(CurStr[0] != '(')
-            return 0;
-        else {
-            left_ = new Node;
-            sscanf(CurStr + 1, "%d%lf", &left_->type_, &left_->val_);
-            if(left_->Node::FScanNode(CurStr, in) == -1)
-                return -1;
-
-            if(CurStr[0] != ',') {
-                if(CurStr[0] != ')') {
-                    fprintf(stderr, "Invalid format of input file!!!\n");
-                    return -1;
-                }
-            }
-            else {
-                right_ = new Node;
-                sscanf(CurStr + 1, "%d%lf", &right_->type_, &right_->val_);
-
-                if(right_->Node::FScanNode(CurStr, in) == -1) return -1;
-                if(CurStr[0] != ')') {
-                    fprintf(stderr, "Invalid format of input file!!!\n");
-                    return -1;
-                }
-            }
-            in.getline(CurStr, MAX_NAME_LEN + 1);
-            //fgets(CurStr, MAX_NAME_LEN + 1, fd);
-        }
-    }
-    return 0;
-}
-
 // Calculate number of nodes in tree, started by this root (used by destructor)
 size_t Node::NumberOfNodes() {
     int i = 0;
-    if(left_ != NULL)
+    if(left_ != nullptr)
         i += left_->NumberOfNodes();
-    if(right_ != NULL)
+    if(right_ != nullptr)
         i += right_->NumberOfNodes();
     return i + 1;
 }
@@ -403,34 +287,34 @@ nod_val Node::TreeCount(nod_val var) {
     const char ERROR_MSG[] = "There is broken tree after operation \'";
     switch(type_) {
     case OP:
-        if(left_ == NULL) {
+        if(left_ == nullptr) {
             std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             return 0;
         }
         switch(static_cast<char>(val_)) {
         case '+':
-            if(right_ == NULL) {
+            if(right_ == nullptr) {
                 std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return left_->TreeCount(var) + right_->TreeCount(var);
         case '-':
-            if(right_ == NULL) {
+            if(right_ == nullptr) {
                 //fprintf(stderr, "There is broken tree after operation \"%c\"!\n", this->val);
                 return (nod_val)((-1) * left_->TreeCount(var));
             }
             return left_->TreeCount(var) - right_->TreeCount(var);
         case '*':
-            if(right_ == NULL) {
+            if(right_ == nullptr) {
                 std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return left_->TreeCount(var) * right_->TreeCount(var);
         case '/':
-            if(right_ == NULL) {
+            if(right_ == nullptr) {
                 std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return left_->TreeCount(var) / right_->TreeCount(var);
         case '^':
-            if(right_ == NULL) {
+            if(right_ == nullptr) {
                 std::cerr << ERROR_MSG << static_cast<char>(val_) << "\'!" << std::endl;
             }
             return (nod_val) pow(left_->TreeCount(var), right_->TreeCount(var));
@@ -463,7 +347,7 @@ nod_val Node::TreeCount(nod_val var) {
 // Used to make tex file with expression
 // If completed == true (default), then the full structure of the tex file is built
 int Node::MakeTex (const char* FileName, bool completed) {
-    assert(FileName != NULL);
+    assert(FileName != nullptr);
 
     std::ofstream out;
     if(completed)
@@ -485,7 +369,7 @@ int Node::MakeTex (const char* FileName, bool completed) {
 }
 
 // Used to make tex file with expression
-// Prints to out incomplete tex code (without TEX_HEADER and TEX_END_DOCUMENT)
+// If completed == false (default), then the incomplete tex file is built (for appending)
 int Node::MakeTex (std::ofstream& out, bool completed) {
     if(!out) {
         std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
@@ -609,6 +493,8 @@ int Node::MakeTexNode (std::ofstream& out) {
     return 0;
 }
 
+// Support recursive function, used in Node::MakeTexNode,
+//prints node of type binary OP and his children to ifstream out
 int Node::MakeBinaryNodeTex(std::ofstream& out, char val_char, const char *left, const char *center, const char *right) {
     out << left;
     MAKE_LEFT_NODE_TEX (left_,  val_char, out);
@@ -618,6 +504,8 @@ int Node::MakeBinaryNodeTex(std::ofstream& out, char val_char, const char *left,
     return 0;
 }
 
+// Support recursive function, used in Node::MakeTexNode,
+//prints node of type unary OP and his children to ifstream out
 int Node::MakeUnaryNodeTex(std::ofstream& out, char val_char, const char *left, const char *right) {
     out << left;
     MAKE_LEFT_NODE_TEX(left_, val_char, out);
@@ -659,11 +547,11 @@ bool Node::IsVar() {
     if(type_ == VAR)
         return true;
     bool VarLeft, VarRight;
-    if(left_ != NULL)
+    if(left_ != nullptr)
         VarLeft = left_->IsVar();
     else
         VarLeft = false;
-    if(right_ != NULL)
+    if(right_ != nullptr)
         VarRight = right_->IsVar();
     else
         VarRight = false;
@@ -678,7 +566,7 @@ Node* Node::Diff() {
         return new Node(NUM, 1);
     if(type_ != OP) {
         fprintf(stderr, "Unknown type of node!\n");
-        return NULL;
+        return nullptr;
     }
 
     switch (static_cast<char>(val_)) {
@@ -686,7 +574,7 @@ Node* Node::Diff() {
         return *left_->Diff() + right_->Diff();
         break;
     case '-':
-        if(right_ == NULL) {
+        if(right_ == nullptr) {
             return new Node(OP, '-', left_->Diff());
         }
         return *left_->Diff() - right_->Diff();
@@ -698,21 +586,21 @@ Node* Node::Diff() {
         return *(*(*left_->Diff() * right_->NodeCopy()) - (*left_->NodeCopy() * right_->Diff())) / (*right_->NodeCopy() ^ 2);
         break;
     case 's':
-        if(left_ == NULL) {
+        if(left_ == nullptr) {
             fprintf(stderr, "Diff: No argument in sin!\n"); //argument of sin/cos must be left child
             return this->NodeCopy();
         }
         return *new Node(OP, 'c', left_->NodeCopy()) * left_->Diff();
         break;
     case 'c':
-        if(left_ == NULL) {
+        if(left_ == nullptr) {
             fprintf(stderr, "Diff: No argument in cos!\n"); //argument of cos/sin must be left child
             return this->NodeCopy();
         }
         return *(*new Node(NUM, 0) - new Node(OP, 's', left_->NodeCopy())) * left_->Diff();
         break;
     case '^':
-        if(left_ == NULL || right_ == NULL) {
+        if(left_ == nullptr || right_ == nullptr) {
             fprintf(stderr, "Diff: Left or right child does not exists for /'^/'!\n");
             return this->NodeCopy();
         }
@@ -738,7 +626,7 @@ Node* Node::Diff() {
         }
         break;
     case 'l': // ln(x)' = (1/x) * x'
-        if(left_ == NULL) {
+        if(left_ == nullptr) {
             std::cerr << __PRETTY_FUNCTION__ << ": Left child does not exists for \"ln\"!" << std::endl;
             return this->NodeCopy();
         }
@@ -746,7 +634,7 @@ Node* Node::Diff() {
         break;
     default:
         std::cerr << __PRETTY_FUNCTION__ << ": Unknown operation \'" << val_ << "\'!" << std::endl;
-        return NULL;
+        return nullptr;
         break;
     }
 }
@@ -761,9 +649,9 @@ int Node::Optimization() {
     case OP: {
         int LeftVal  = 0;
         int RightVal = 0;
-        if(left_ != NULL)
+        if(left_ != nullptr)
             LeftVal  = left_->Optimization();
-        if(right_ != NULL)
+        if(right_ != nullptr)
             RightVal = right_->Optimization();
         Node* Left  = left_;
         Node* Right = right_;
@@ -773,19 +661,19 @@ int Node::Optimization() {
             if(RightVal == 0 && LeftVal == 0) {
                 delete left_;
                 delete right_;
-                left_  = NULL;
-                right_ = NULL;
+                left_  = nullptr;
+                right_ = nullptr;
                 this->NodeSet(NUM, 0);
                 return 0;
             }
-            else if(RightVal == 0 && right_ != NULL) {
+            else if(RightVal == 0 && right_ != nullptr) {
                 delete right_;
-                right_ = NULL;
+                right_ = nullptr;
                 this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
-                Left->left_  = NULL;
-                Left->right_ = NULL;
+                Left->left_  = nullptr;
+                Left->right_ = nullptr;
                 delete Left;
-                Left = NULL;
+                Left = nullptr;
                 return val_;
             }
             else if(LeftVal == 0) {
@@ -793,17 +681,17 @@ int Node::Optimization() {
 
                 if(val_ == '-') {
                     left_ = right_;
-                    right_ = NULL;
+                    right_ = nullptr;
                     return val_;
                 }
 
-                left_ = NULL;
+                left_ = nullptr;
                 this->NodeSet(right_->type_, right_->val_, right_->left_, right_->right_);
-                Right->left_  = NULL;
-                Right->right_ = NULL;
+                Right->left_  = nullptr;
+                Right->right_ = nullptr;
 
                 delete Right;
-                Right = NULL;
+                Right = nullptr;
                 return val_;
             }
             break;
@@ -812,37 +700,37 @@ int Node::Optimization() {
             if(LeftVal == 0 || RightVal == 0) {
                 delete left_;
                 delete right_;
-                left_  = NULL;
-                right_ = NULL;
+                left_  = nullptr;
+                right_ = nullptr;
                 this->NodeSet(NUM, 0);
                 return 0;
             }
             else if (RightVal == 1 && LeftVal == 1) {
                 delete left_;
                 delete right_;
-                left_  = NULL;
-                right_ = NULL;
+                left_  = nullptr;
+                right_ = nullptr;
                 this->NodeSet(NUM, 1);
                 return 1;
             }
             else if(RightVal == 1) {
                 delete right_;
-                right_ = NULL;
+                right_ = nullptr;
                 this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
-                Left->left_  = NULL;
-                Left->right_ = NULL;
+                Left->left_  = nullptr;
+                Left->right_ = nullptr;
                 delete Left;
-                Left = NULL;
+                Left = nullptr;
                 return val_;
             }
             else if(LeftVal == 1) {
                 delete left_;
-                left_ = NULL;
+                left_ = nullptr;
                 this->NodeSet(right_->type_, right_->val_, right_->left_, right_->right_);
-                Right->left_  = NULL;
-                Right->right_ = NULL;
+                Right->left_  = nullptr;
+                Right->right_ = nullptr;
                 delete Right;
-                Right = NULL;
+                Right = nullptr;
                 return val_;
             }
             break;
@@ -854,27 +742,27 @@ int Node::Optimization() {
             else if(LeftVal == 0) {
                 delete left_;
                 delete right_;
-                left_  = NULL;
-                right_ = NULL;
+                left_  = nullptr;
+                right_ = nullptr;
                 this->NodeSet(NUM, 0);
                 return 0;
             }
             else if (RightVal == 1 && LeftVal == 1) {
                 delete left_;
                 delete right_;
-                left_  = NULL;
-                right_ = NULL;
+                left_  = nullptr;
+                right_ = nullptr;
                 this->NodeSet(NUM, 1);
                 return 1;
             }
             else if(RightVal == 1) {
                 delete right_;
-                right_ = NULL;
+                right_ = nullptr;
                 this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
-                Left->left_  = NULL;
-                Left->right_ = NULL;
+                Left->left_  = nullptr;
+                Left->right_ = nullptr;
                 delete Left;
-                Left = NULL;
+                Left = nullptr;
                 return val_;
             }
             break;
@@ -882,7 +770,7 @@ int Node::Optimization() {
         case 'c':
             if(LeftVal == 0) {
                 delete left_;
-                left_  = NULL;
+                left_  = nullptr;
                 if(val_ == 's')
                     this->NodeSet(NUM, 0);
                 else
@@ -899,8 +787,8 @@ int Node::Optimization() {
                 else {
                     delete left_;
                     delete right_;
-                    left_  = NULL;
-                    right_ = NULL;
+                    left_  = nullptr;
+                    right_ = nullptr;
                     this->NodeSet(NUM, 0);
                     return 0;
                 }
@@ -908,19 +796,19 @@ int Node::Optimization() {
             if(LeftVal == 1 || RightVal == 0) {
                 delete left_;
                 delete right_;
-                left_  = NULL;
-                right_ = NULL;
+                left_  = nullptr;
+                right_ = nullptr;
                 this->NodeSet(NUM, 1);
                 return 1;
             }
             else if(RightVal == 1) {
                 delete right_;
-                right_ = NULL;
+                right_ = nullptr;
                 this->NodeSet(left_->type_, left_->val_, left_->left_, left_->right_);
-                Left->left_  = NULL;
-                Left->right_ = NULL;
+                Left->left_  = nullptr;
+                Left->right_ = nullptr;
                 delete Left;
-                Left = NULL;
+                Left = nullptr;
                 return val_;
             }
             break;
@@ -938,8 +826,9 @@ int Node::Optimization() {
     return val_;
 }
 
+// Differentiates the expression and writes the result to a .tex file
 int Node::DiffTex (const char* FileName, bool optim) {
-    assert(FileName != NULL);
+    assert(FileName != nullptr);
 
     std::ofstream out(FileName);
     if(!out) {
@@ -951,7 +840,7 @@ int Node::DiffTex (const char* FileName, bool optim) {
         this->Optimization();
 
     Node* diff = this->Diff();
-    if(diff == NULL)
+    if(diff == nullptr)
         return -1;
 
     if(optim)
@@ -969,6 +858,13 @@ int Node::DiffTex (const char* FileName, bool optim) {
     return 0;
 }
 
+// Message to std::cerr that type is unknown
+void UnknownTypeMsg(int type) {
+    std::cerr << __PRETTY_FUNCTION__ << ": unknown type! Number of type " << type
+              << ", equal character " << static_cast<char>(type) << "!" << std::endl;
+}
+
+// Generate array (writing to brae[][2]), that contain "(\0" and ")\0" | or | "[\0" and "]\0", probability: 2:1
 void RandomBrace(char brace[][2]) {
     int brace_id = rand() % 3;      // 2:1 ():[]
     //char brace[2][MAX_BRACE_LEN];
@@ -988,4 +884,116 @@ void RandomBrace(char brace[][2]) {
         break;
     }
     //return brace;
+}
+
+//                                                         OPTIONAL PART
+
+// Support function for Node::SaveTree, prints node
+int Node::FPrintNode(std::ofstream& out) {
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+    }
+    //printf("%d %d\n", type_, val_);
+    out << type_ << " " << val_ << std::endl;
+    if(left_ != nullptr) {
+        //printf("(");
+        out << "(";
+        left_->Node::FPrintNode(out);
+    }
+    if(right_ != nullptr) {
+        //printf(",");
+        out << ",";
+        right_->Node::FPrintNode(out);
+        //printf(")\n");
+        out << ")\n";
+    }
+    else if(left_ != nullptr) {
+        //printf(")\n");
+        out << ")\n";
+    }
+    return 0;
+}
+
+// Simple saving graph (expression) to file for future reset
+int Node::SaveTree(const char* filename) {
+    assert(filename != nullptr);
+    std::ofstream out(filename);
+    if(!out) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    out << type_ << " " << val_ << std::endl;
+    out << type_ << " " << val_ << std::endl;
+    if(left_ != nullptr)
+        left_->Node::FPrintNode(out);
+    if(right_ != nullptr)
+        right_->Node::FPrintNode(out);
+    //fclose(fd);
+    return 0;
+}
+
+// Build tree from file
+void Node::TreeConstruct(const char* filename) {
+    assert(filename != nullptr);
+    std::ifstream in(filename);
+    if(!in) {
+        std::cerr << __PRETTY_FUNCTION__<< ": " << strerror(errno) << std::endl;
+        return;
+    }
+
+    left_  = nullptr;
+    right_ = nullptr;
+
+    in >> type_;
+    if(!in.good())
+        return;
+    in >> val_;
+
+    char buff[MAX_NAME_LEN+1];
+    in.getline(buff, MAX_NAME_LEN); //fgets(buff, MAX_NAME_LEN, fd);
+
+    this->FScanNode(buff, in);
+}
+
+//Support function for Node::TreeConstruct (scan node)
+int Node::FScanNode(char* CurStr, std::ifstream& in) {
+    assert(!in.fail()); //assert(fd  != nullptr);
+    //char buff[MAX_NAME_LEN+1];
+    if(!in.getline(CurStr, MAX_NAME_LEN + 1) || CurStr[0] == '\n') {
+        return -1;
+    }
+    else {
+        int BuffLen = strlen(CurStr);
+        if(BuffLen > 0 && CurStr[BuffLen - 1] == '\n')
+            CurStr[BuffLen - 1] = '\0';
+        if(CurStr[0] != '(')
+            return 0;
+        else {
+            left_ = new Node;
+            sscanf(CurStr + 1, "%d%lf", &left_->type_, &left_->val_);
+            if(left_->Node::FScanNode(CurStr, in) == -1)
+                return -1;
+
+            if(CurStr[0] != ',') {
+                if(CurStr[0] != ')') {
+                    fprintf(stderr, "Invalid format of input file!!!\n");
+                    return -1;
+                }
+            }
+            else {
+                right_ = new Node;
+                sscanf(CurStr + 1, "%d%lf", &right_->type_, &right_->val_);
+
+                if(right_->Node::FScanNode(CurStr, in) == -1) return -1;
+                if(CurStr[0] != ')') {
+                    fprintf(stderr, "Invalid format of input file!!!\n");
+                    return -1;
+                }
+            }
+            in.getline(CurStr, MAX_NAME_LEN + 1);
+            //fgets(CurStr, MAX_NAME_LEN + 1, fd);
+        }
+    }
+    return 0;
 }
