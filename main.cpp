@@ -26,42 +26,7 @@ int main(int argc, char* argv[]) {
     }
     Analyzer *a = new Analyzer(input);
     if(argc > 1 && a->tree != NULL) {
-        a->tree->MakeGraphFile(SupDotFile);
-        sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[1]);
-        if(system(input) == -1) {
-            if(argv[1] == NULL)
-                fprintf(stderr, "system: null argument!\n");
-            else
-                fprintf(stderr, "Impossible to create picture %s, no access to shell,"
-                                " or impossible to create child process! (Command \"system\" failed) \n", argv[1]);
-        }
 
-//        if(argc > 2) {
-//            Node* n = a->tree->Diff();
-//            n->Optimization();
-//            n->MakeGraphFile(SupDotFile);
-//            sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[2]);
-//            if(system(input) == -1) {
-//                if(argv[2] == NULL)
-//                    fprintf(stderr, "system: null argument!\n");
-//                else
-//                    fprintf(stderr, "Impossible to create picture %s, no access to shell,"
-//                                    " or impossible to create child process! (Command \"system\" failed) \n", argv[2]);
-//            }
-//            if(argc > 3) {
-//                n->MakeTex(argv[3]);
-//                sprintf(input, "pdflatex %s", argv[3]);
-//                if(system(input) == -1) {
-//                    if(argv[3] == NULL)
-//                        fprintf(stderr, "system: null argument!\n");
-//                    else
-//                        fprintf(stderr, "Impossible to create picture %s, no access to shell,"
-//                                        " or impossible to create child process! (Command \"system\" failed) \n", argv[3]);
-//                }
-//            }
-//            delete n;
-//            n = NULL;
-//        }
         a->tree->DiffTex(argv[3]);
         sprintf(input, "pdflatex %s", argv[3]);
         if(system(input) == -1) {

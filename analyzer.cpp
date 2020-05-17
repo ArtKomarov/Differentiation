@@ -60,7 +60,8 @@ Node* Analyzer::GetG() {
     if(this->SkipSpaces() == -1)
         return nullptr;
     Node *val = GetE(); //Get x+y or x-y
-
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     if(val != NULL && (*s != '\n') && (*s != '\0'))
         std::cerr << "Syntax error: the expression was expected to end, but a \'" << *s << "\' was found!" << std::endl;
     return val;
@@ -97,6 +98,8 @@ Node *Analyzer::GetE() {
         val = total; // Collect result
     }
 
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val;
 }
 
@@ -128,6 +131,8 @@ Node *Analyzer::GetT() {
         total = new Node(OP, oper, val, val2);
         val   = total;
     }
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val;
 }
 
@@ -157,6 +162,8 @@ Node *Analyzer::GetPow() {
         val = total;
     }
 
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val;
 }
 
@@ -207,6 +214,8 @@ Node* Analyzer::GetSP(const char* func_name) {
         val = nullptr;
     }
 
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val;
 }
 
@@ -229,9 +238,13 @@ Node* Analyzer::GetVN() {
         if((val2 = GetV()) != NULL) { // Get var
             Node* total;
             total = new Node(OP, '*', val1, val2); // It means, that 5x -> 5 * x
+            if(this->SkipSpaces() == -1)
+                return nullptr;
             return total;
         }
         else {
+            if(this->SkipSpaces() == -1)
+                return nullptr;
             return val1;
         }
     }
@@ -252,6 +265,8 @@ Node* Analyzer::GetSin() {
         return nullptr;
 
     Node* val2 = new Node(OP, 's', val);
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val2;
 }
 
@@ -271,6 +286,8 @@ Node* Analyzer::GetCos() {
     }
 
     Node* val2 = new Node(OP, 'c', val);
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val2;
 }
 
@@ -343,6 +360,8 @@ Node *Analyzer::GetL() {
 //    if(*s++ != ')')
 //        fprintf(stderr, "Syntax error, expected /')/' after ln!\n");
     Node* val2 = new Node(OP, 'l', val);
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return val2;
 }
 
@@ -370,6 +389,8 @@ Node* Analyzer::GetN() {
     if(start == s) return NULL;
 
     Node* res = new Node(NUM, val);
+    if(this->SkipSpaces() == -1)
+        return nullptr;
     return res;
 }
 
@@ -396,9 +417,12 @@ Node* Analyzer::GetV() {
         }
     }
 
-    if(start == s) return NULL;
+    if(start == s)
+        return NULL;
     else {
         Node* n = new Node(VAR);
+        if(this->SkipSpaces() == -1)
+            return nullptr;
         return n;
     }
 }

@@ -9,6 +9,7 @@
 extern const char GraphHeader[];
 
 extern const size_t MAX_DIVIDEND_LEN;
+//const size_t MAX_BRACE_LEN = 20;
 
 #define UNKNOWN_TYPE_MSG(type) \
     std::cerr << __PRETTY_FUNCTION__ << ": unknown type! Number of type " << type \
@@ -54,7 +55,6 @@ public:
 
     void    TreeConstruct   (const char* filename);
     int     FScanNode       (char* CurStr, std::ifstream& fd);
-    void    SkipSpaces      ();
 
     size_t  NumberOfNodes   ();
     nod_val TreeCount       (nod_val var);
@@ -94,6 +94,7 @@ if(NODE) {                                     \
     sprintf(MAKE_RIGHT_NODE_TEX_MSG_, "Binary operation \'%c\' must have 2 operands!", OPER); \
     MAKE_NODE_TEX(RIGHT, OPER, STREAM, MAKE_RIGHT_NODE_TEX_MSG_);
 
+void RandomBrace(char brace[][2]);
 
 
 #endif // NODE_H

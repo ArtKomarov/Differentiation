@@ -20,6 +20,7 @@ const char TEX_HEADER[]  = "\\documentclass[14pt]{article}\n"
 const char TEX_END_DOCUMENT[] = "$\\end{document}";
 
 const size_t MAX_DIVIDEND_LEN = 15;
+//const size_t MAX_BRACE_LEN    = 20;
 
 // Node::Constructor == Node::Node
 //Free construtor
@@ -507,26 +508,33 @@ int Node::MakeTexNode (std::ofstream& out) {
 
     switch(type_) {
     case OP: {
+        char brace[2][2];
+        RandomBrace(brace);
         char val_char = static_cast<char>(val_);
         switch (val_char) {
         case '+':
-        case '-':
-            char oper[3]; // 'operand' + maybe '(' + '\0'
+        case '-': {
+            char oper[5]; // 'operand' + maybe brace + '\0'
             if(right_) {
                 sprintf(oper, "%c", val_char);
                 if(this->MakeBinaryNodeTex(out, val_char, "", oper) == -1)
                     return -1;
             }
             else {
-                sprintf(oper, "%c(", val_char);
-                if(this->MakeUnaryNodeTex(out, val_char, oper, ")") == -1)
+                sprintf(oper, "%c%s", val_char, brace[0]);
+                if(this->MakeUnaryNodeTex(out, val_char, oper, brace[1]) == -1)
                     return -1;
             }
             break;
-        case '*':
-            if(this->MakeBinaryNodeTex(out, val_char, "(", ") \\cdot (", ")") == -1)
+        }
+        case '*': {
+            char center[2*2 + 8 + 1];
+            sprintf(center, "%s \\cdot %s", brace[1], brace[0]);
+            //if(this->MakeBinaryNodeTex(out, val_char, "(", ") \\cdot (", ")") == -1)
+            if(this->MakeBinaryNodeTex(out, val_char, brace[0], center, brace[1]) == -1)
                 return -1;
             break;
+        }
         case '/':
             //Если будет длинная дробь, она не влезет на страницу,
             // поэтому используем \frac{}{} только для не большой глубины дерева (<= MAX_DIVIDEND_LEN)
@@ -535,7 +543,9 @@ int Node::MakeTexNode (std::ofstream& out) {
                     return -1;
             }
             else {
-                if(this->MakeBinaryNodeTex(out, val_char, "(", ")/(", ")") == -1)
+                char center[2*2 + 4];
+                sprintf(center, "%s / %s", brace[1], brace[0]);
+                if(this->MakeBinaryNodeTex(out, val_char, brace[0], center, brace[1]) == -1)
                     return -1;
             }
             break;
@@ -543,18 +553,27 @@ int Node::MakeTexNode (std::ofstream& out) {
             if(this->MakeBinaryNodeTex(out, val_char, "", "^{", "}") == -1)
                 return -1;
             break;
-        case 's':
-            if(this->MakeUnaryNodeTex(out, val_char, "\\sin(", ")") == -1)
+        case 's': {
+            char lef[8];
+            sprintf(lef, "\\sin%s", brace[0]);
+            if(this->MakeUnaryNodeTex(out, val_char, lef, brace[1]) == -1)
                 return -1;
             break;
-        case 'c':
-            if(this->MakeUnaryNodeTex(out, val_char, "\\cos(", ")") == -1)
+        }
+        case 'c': {
+            char lef[8];
+            sprintf(lef, "\\cos%s", brace[0]);
+            if(this->MakeUnaryNodeTex(out, val_char, lef, brace[1]) == -1)
                 return -1;
             break;
-        case 'l':
-            if(this->MakeUnaryNodeTex(out, val_char, "\\ln(", ")") == -1)
+        }
+        case 'l': {
+            char lef[8];
+            sprintf(lef, "\\ln%s", brace[0]);
+            if(this->MakeUnaryNodeTex(out, val_char, lef, brace[1]) == -1)
                 return -1;
             break;
+        }
         default:
             left_->MakeTexNode(out);
             out << val_char;
@@ -936,3 +955,23 @@ int Node::DiffTex (const char* FileName, bool optim) {
     return 0;
 }
 
+void RandomBrace(char brace[][2]) {
+    int brace_id = rand() % 3;      // 2:1 ():[]
+    //char brace[2][MAX_BRACE_LEN];
+    switch (brace_id) {
+    case 0:
+    case 1:
+        brace[0][0] = '(';
+        brace[0][1] = '\0';
+        brace[1][0] = ')';
+        brace[1][1] = '\0';
+        break;
+    case 2:
+        brace[0][0] = '[';
+        brace[0][1] = '\0';
+        brace[1][0] = ']';
+        brace[1][1] = '\0';
+        break;
+    }
+    //return brace;
+}

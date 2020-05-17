@@ -33,10 +33,10 @@ public:
     Node* GetT();   // Get multiplication ot division
     Node* GetP();   // Get parenthesis
     Node* GetV();   // Get variable
-    Node* GetVN();  // Get variable + number
+    Node* GetVN();  // Get variable, number, variable + number, sin, cos, ln
     Node* GetSin(); // Get sin
     Node* GetCos(); // Get cos
-    Node* GetSC();  // Get sin or cos
+    //Node* GetSC();  // Get sin or cos
     Node* GetPow(); // Get power
     Node* GetL();   // Get ln
 
