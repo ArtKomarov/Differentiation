@@ -47,6 +47,7 @@ When the function can't parse the expression any further, it leaves the string u
 If, for example, the GetVN function has more than one outgoing arrow, it uses all the children in turn.  
 However, from the point of view of expression analysis, the children of this function are equal and only one of them can parse expressions at this stage (or no one).
 ## Examples  
+All examples you could see in example folder.  
 In the pictures below you can see examples of the expression and its differentiated variant.  
 ![Logo](examples/tree.png)
 ![Logo](examples/temp.png)  
