@@ -52,7 +52,11 @@ In the pictures below you can see examples of the expression and its differentia
 ![Logo](examples/temp.png)  
 But if the expression is more complex, the graph visualization is not beautiful.  
 So, below you can see an example of differentiating the expression and rendering the response as a pdf.  
-![Logo](examples/Differ.pdf)  
+<object data="https://github.com/ArtKomarov/Differentiation/tree/master/examples/Differ.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="http://yoursite.com/the.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="http://yoursite.com/the.pdf">Download PDF</a>.</p>
+    </embed>
+</object>  
 For implementation details, see the source code!)  
   
 AK, 2020
