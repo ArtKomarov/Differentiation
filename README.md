@@ -30,7 +30,7 @@ Visualization is also a pass through the tree, but with a writing of the TeX cod
 But, wait, how do I build a tree, how do I parse an expression?  
 #### The algorithm of expression parsing
 You can see analyzing (parsing) graph below.  
-![Logo](AnalyzerGraph.png)
+![Logo](AnalyzerGraph.png)  
 ```cpp
     Node* GetG();   // Get full expression
     Node* GetN();   // Get number
@@ -46,3 +46,13 @@ These functions try to "get" the corresponding operation or their repetition (th
 When the function can't parse the expression any further, it leaves the string unchanged, and the tree received at this stage passes it in the opposite direction of the arrow (recursion).  
 If, for example, the GetVN function has more than one outgoing arrow, it uses all the children in turn.  
 However, from the point of view of expression analysis, the children of this function are equal and only one of them can parse expressions at this stage (or no one).
+## Examples  
+In the pictures below you can see examples of the expression and its differentiated variant.  
+![Logo](examples/tree.png)
+![Logo](examples/temp.png)  
+But if the expression is more complex, the graph visualization is not beautiful.  
+So, below you can see an example of differentiating the expression and rendering the response as a pdf.  
+![Logo](examples/Differ.pdf)  
+For implementation details, see the source code!)  
+  
+AK, 2020
