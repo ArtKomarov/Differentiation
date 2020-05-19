@@ -48,9 +48,11 @@ int main(int argc, char* argv[]) {
 
                 if(argc > 3) {
                     Node* n = a->tree->Diff();
-                    n->Optimization();
-                    n->MakeGraphFile(SupDotFile);
-                    sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[3]);
+                    if(n != nullptr) {
+                        n->Optimization();
+                        n->MakeGraphFile(SupDotFile);
+                        sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[3]);
+                    }
                     delete n;
                 }
             }
