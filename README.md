@@ -33,14 +33,18 @@ You can see analyzing (parsing) graph below.
 ![Logo](AnalyzerGraph.png)  
 ```cpp
     Node* GetG();   // Get full expression
-    Node* GetN();   // Get number
     Node* GetE();   // Get addition or subtraction
     Node* GetT();   // Get multiplication ot division
     Node* GetP();   // Get parenthesis
+    Node* GetPow(); // Get power
+    Node* GetVN();  // Get one of variable, number, variable + number, sin, cos, ln
     Node* GetV();   // Get variable
-    Node* GetVN();  // Get variable, number, variable + number, sin, cos, ln
+    Node* GetN();   // Get number
     Node* GetSin(); // Get sin
     Node* GetCos(); // Get cos
+    Node* GetL();   // Get ln
+
+    Node* GetSP(const char* func_name); //Get strict parenthesis
 ```
 These functions try to "get" the corresponding operation or their repetition (that is, they can only read this operation), and use the next arrow function in the graph as an argument(s).  
 When the function can't parse the expression any further, it leaves the string unchanged, and the tree received at this stage passes it in the opposite direction of the arrow (recursion).  
