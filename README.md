@@ -30,19 +30,38 @@ Visualization is also a pass through the tree, but with a writing of the TeX cod
 But, wait, how do I build a tree, how do I parse an expression?  
 #### The algorithm of expression parsing
 You can see analyzing (parsing) graph below.  
-![Logo](AnalyzerGraph.png)
+![Logo](AnalyzerGraph.png)  
 ```cpp
     Node* GetG();   // Get full expression
-    Node* GetN();   // Get number
     Node* GetE();   // Get addition or subtraction
     Node* GetT();   // Get multiplication ot division
     Node* GetP();   // Get parenthesis
+    Node* GetPow(); // Get power
+    Node* GetVN();  // Get one of variable, number, variable + number, sin, cos, ln
     Node* GetV();   // Get variable
-    Node* GetVN();  // Get variable, number, variable + number, sin, cos, ln
+    Node* GetN();   // Get number
     Node* GetSin(); // Get sin
     Node* GetCos(); // Get cos
+    Node* GetL();   // Get ln
+
+    Node* GetSP(const char* func_name); //Get strict parenthesis
 ```
 These functions try to "get" the corresponding operation or their repetition (that is, they can only read this operation), and use the next arrow function in the graph as an argument(s).  
 When the function can't parse the expression any further, it leaves the string unchanged, and the tree received at this stage passes it in the opposite direction of the arrow (recursion).  
 If, for example, the GetVN function has more than one outgoing arrow, it uses all the children in turn.  
 However, from the point of view of expression analysis, the children of this function are equal and only one of them can parse expressions at this stage (or no one).
+## Examples  
+All examples you could see in example folder.  
+In the pictures below you can see examples of the expression and its differentiated variant.  
+![Logo](examples/tree.png)
+![Logo](examples/temp.png)  
+But if the expression is more complex, the graph visualization is not beautiful.  
+So, below you can see an example of differentiating the expression and rendering the response as a pdf.  
+<object data="https://github.com/ArtKomarov/Differentiation/tree/master/examples/Differ.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="http://yoursite.com/the.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="http://yoursite.com/the.pdf">Download PDF</a>.</p>
+    </embed>
+</object>  
+For implementation details, see the source code!)  
+  
+AK, 2020
