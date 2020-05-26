@@ -130,12 +130,14 @@ Node::Node(int type, nod_val val, Node* left) {
         break;
     }
     case NUM: {
-        std::cerr <<  __PRETTY_FUNCTION__ << " for operations used for number!" << std::endl;
+        std::cerr <<  __PRETTY_FUNCTION__
+                  << " for operations used for number!" << std::endl;
         NodeSet(type, val);
         break;
     }
     case VAR: {
-        std::cerr <<  __PRETTY_FUNCTION__ << " for operations used for variable!" << std::endl;
+        std::cerr <<  __PRETTY_FUNCTION__
+                  << " for operations used for variable!" << std::endl;
         NodeSet(type);
         break;
     }
@@ -143,6 +145,7 @@ Node::Node(int type, nod_val val, Node* left) {
         type_  = type;
         val_   = val;
         left_  = left;
+
         UnknownTypeMsg(type);
     }
 }
@@ -200,10 +203,12 @@ void Node::NodeSet(int type, nod_val val, Node* left) {
 Node* Node::NodeCopy() {
     Node* left = nullptr;
     Node* right = nullptr;
+
     if(left_ != nullptr)
         left = left_->NodeCopy();
     if(right_ != nullptr)
         right = right_->NodeCopy();
+
     return new Node(type_, val_, left, right);
 }
 
@@ -215,21 +220,25 @@ nod_val Node::GetVal() {
 // Support function for Node::MakeGraphFile - prints node
 int Node::FPrintGraphNode(std::ofstream& out) {
     long id      = this - (Node*)0x0; // Unique id for every node, that helps building correct the graph
-    long leftid  = 0;
-    long rightid = 0;
+    long left_id  = 0;
+    long right_id = 0;
+
     if(left_ != nullptr) {
-        leftid = left_ - (Node*)0x0;   // down
-        out << leftid <<" [label = ";
+        left_id = left_ - (Node*)0x0;   // down
+        out << left_id <<" [label = ";
+
         if(left_->type_ == NUM) {
             out << "\"" << left_->val_ <<"\"]\n";
         }
         else
             out << "\"" << static_cast<char>(left_->val_) << "\"]\n";
-        out << id << " -> " << leftid << "\n";
+
+        out << id << " -> " << left_id << "\n";
     }
+
     if(right_ != nullptr) {
-        rightid = right_ - (Node*)0x0;
-        out << rightid << " [label = ";
+        right_id = right_ - (Node*)0x0;
+        out << right_id << " [label = ";
 
         if(right_->type_ == NUM) {
             out << "\"" << right_->val_ << "\"]\n";
@@ -237,12 +246,15 @@ int Node::FPrintGraphNode(std::ofstream& out) {
         else
             out << "\"" << static_cast<char>(right_->val_) << "\"]\n";
 
-        out << id <<" -> " << rightid << "\n";
+        out << id <<" -> " << right_id << "\n";
     }
+
     if(left_ != nullptr)
         left_->Node::FPrintGraphNode(out);
-    if(this->right_ != nullptr)
+
+    if(right_ != nullptr)
         right_->Node::FPrintGraphNode(out);
+
     return 0;
 }
 
@@ -257,8 +269,10 @@ int Node::MakeGraphFile(const char* FileName) {
     }
 
     out << GraphHeader;
-    long id = this - (Node*)0x0;                          // down
-    out << id << " [label = ";
+
+    //  << |unique node id|  << ...
+    out << this - (Node*)0x0 << " [label = ";
+
     if(type_ == NUM) {
         out << "\"" << val_ << "\"]\n";
     }
@@ -267,8 +281,6 @@ int Node::MakeGraphFile(const char* FileName) {
 
     this->Node::FPrintGraphNode(out);
     out << "}\n";
-    //fclose(fd);
-    //out.close();
     return 0;
 }
 
@@ -326,7 +338,6 @@ nod_val Node::TreeCount(nod_val var) {
             return (nod_val) log(left_->TreeCount(var));
         default:
             std::cerr << "There is broken tree, unknown operation \'" << static_cast<char>(val_) << "\'!" << std::endl;
-            return 0;
         }
         break;
     case NUM:
@@ -336,12 +347,12 @@ nod_val Node::TreeCount(nod_val var) {
             return var;
         else {
             fputs("TreeCount: Variable value is NAN!\n", stderr);
-            return 0;
         }
+        break;
     default:
         fprintf(stderr, "There is broken tree, unknown type number \"%d\"!\n", type_);
-        return 0;
     }
+    return 0;
 }
 
 // Used to make tex file with expression
@@ -359,13 +370,15 @@ int Node::MakeTex (const char* FileName, bool completed) {
         return -1;
     }
 
-    if(completed)
-        out << TEX_HEADER;
+    return MakeTex(out, completed);
 
-    this->Node::MakeTexNode(out);
-    if(completed)
-        out << TEX_END_DOCUMENT;
-    return 0;
+//    if(completed)
+//        out << TEX_HEADER;
+
+//    this->Node::MakeTexNode(out);
+//    if(completed)
+//        out << TEX_END_DOCUMENT;
+//    return 0;
 }
 
 // Used to make tex file with expression
@@ -405,11 +418,13 @@ int Node::MakeTexNode (std::ofstream& out) {
             char oper[5]; // 'operand' + maybe brace + '\0'
             if(right_) {
                 sprintf(oper, "%c", val_char);
+
                 if(this->MakeBinaryNodeTex(out, val_char, "", oper) == -1)
                     return -1;
             }
             else {
                 sprintf(oper, "%c%s", val_char, brace[0]);
+
                 if(this->MakeUnaryNodeTex(out, val_char, oper, brace[1]) == -1)
                     return -1;
             }
@@ -418,13 +433,14 @@ int Node::MakeTexNode (std::ofstream& out) {
         case '*': {
             char center[2*2 + 8 + 1];
             sprintf(center, "%s \\cdot %s", brace[1], brace[0]);
+
             //if(this->MakeBinaryNodeTex(out, val_char, "(", ") \\cdot (", ")") == -1)
             if(this->MakeBinaryNodeTex(out, val_char, brace[0], center, brace[1]) == -1)
                 return -1;
             break;
         }
         case '/':
-            //Если будет длинная дробь, она не влезет на страницу,
+            // Если будет длинная дробь, она не влезет на страницу,
             // поэтому используем \frac{}{} только для не большой глубины дерева (<= MAX_DIVIDEND_LEN)
             if(this->NumberOfNodes() <= MAX_DIVIDEND_LEN) {
                 if(this->MakeBinaryNodeTex(out, val_char, "\\frac{", "}{", "}") == -1)
@@ -433,6 +449,7 @@ int Node::MakeTexNode (std::ofstream& out) {
             else {
                 char center[2*2 + 4];
                 sprintf(center, "%s / %s", brace[1], brace[0]);
+
                 if(this->MakeBinaryNodeTex(out, val_char, brace[0], center, brace[1]) == -1)
                     return -1;
             }
@@ -445,8 +462,10 @@ int Node::MakeTexNode (std::ofstream& out) {
             }
             char center[8];
             sprintf(center, "%s^{%s", brace[1], brace[0]);
+
             char right[8];
             sprintf(right, "%s}", brace[1]);
+
             if(this->MakeBinaryNodeTex(out, val_char, brace[0], center, right) == -1)
                 return -1;
             break;
@@ -454,6 +473,7 @@ int Node::MakeTexNode (std::ofstream& out) {
         case 's': {
             char lef[8];
             sprintf(lef, "\\sin%s", brace[0]);
+
             if(this->MakeUnaryNodeTex(out, val_char, lef, brace[1]) == -1)
                 return -1;
             break;
@@ -461,6 +481,7 @@ int Node::MakeTexNode (std::ofstream& out) {
         case 'c': {
             char lef[8];
             sprintf(lef, "\\cos%s", brace[0]);
+
             if(this->MakeUnaryNodeTex(out, val_char, lef, brace[1]) == -1)
                 return -1;
             break;
@@ -468,15 +489,14 @@ int Node::MakeTexNode (std::ofstream& out) {
         case 'l': {
             char lef[8];
             sprintf(lef, "\\ln%s", brace[0]);
+
             if(this->MakeUnaryNodeTex(out, val_char, lef, brace[1]) == -1)
                 return -1;
             break;
         }
         default:
-            left_->MakeTexNode(out);
-            out << val_char;
-            right_->MakeTexNode(out);
-            break;
+            std::cerr << __PRETTY_FUNCTION__<< ": " << "Unknown node operation!";
+            return -1;
         }
         break;
     }
@@ -496,6 +516,8 @@ int Node::MakeTexNode (std::ofstream& out) {
 // Support recursive function, used in Node::MakeTexNode,
 //prints node of type binary OP and his children to ifstream out
 int Node::MakeBinaryNodeTex(std::ofstream& out, char val_char, const char *left, const char *center, const char *right) {
+    if(!left || !center || ! right || !out)
+        return -1;
     out << left;
     MAKE_LEFT_NODE_TEX (left_,  val_char, out);
     out << center;
@@ -507,6 +529,8 @@ int Node::MakeBinaryNodeTex(std::ofstream& out, char val_char, const char *left,
 // Support recursive function, used in Node::MakeTexNode,
 //prints node of type unary OP and his children to ifstream out
 int Node::MakeUnaryNodeTex(std::ofstream& out, char val_char, const char *left, const char *right) {
+    if(!left || ! right || !out)
+        return -1;
     out << left;
     MAKE_LEFT_NODE_TEX(left_, val_char, out);
     out << right;
@@ -855,6 +879,7 @@ int Node::DiffTex (const char* FileName, bool optim) {
     if(diff->MakeTex(out) == -1)
         return -1;
     out << TEX_END_DOCUMENT;
+    delete diff;
     return 0;
 }
 

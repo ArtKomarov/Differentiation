@@ -40,18 +40,22 @@ int main(int argc, char* argv[]) {
             }
 
             if(argc > 2) {
-                a->tree->MakeGraphFile(SupDotFile);
-                sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[2]);
-                if(system(input) == -1) {
-                    SystemError(argv[2]);
+                if(a->tree->MakeGraphFile(SupDotFile) != -1) {
+                    sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[2]);
+                    if(system(input) == -1) {
+                        SystemError(argv[2]);
+                    }
                 }
-
                 if(argc > 3) {
                     Node* n = a->tree->Diff();
                     if(n != nullptr) {
                         n->Optimization();
-                        n->MakeGraphFile(SupDotFile);
-                        sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[3]);
+                        if(n->MakeGraphFile(SupDotFile) != -1) {
+                            sprintf(input, "dot %s -Tpng -o %s", SupDotFile, argv[3]);
+                            if(system(input) == -1) {
+                                SystemError(argv[2]);
+                            }
+                        }
                     }
                     delete n;
                 }
@@ -64,7 +68,7 @@ int main(int argc, char* argv[]) {
                 std::cerr << "Value of variable did't enter! (Set it to zero)" << std::endl;
             }
         }
-        std::cout << "Ответ: " << a->tree->TreeCount(var) << std::endl;
+        std::cout << "Answer: " << a->tree->TreeCount(var) << std::endl;
     }
     delete a;
     return 0;

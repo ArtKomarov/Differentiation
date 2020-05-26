@@ -10,8 +10,7 @@
 
 using namespace std;
 
-class Analyzer
-{
+class Analyzer {
 private:
     char*  s;
     int    slen;
@@ -27,18 +26,17 @@ public:
 
     int SkipSpaces();
 
-    Node* GetG();   // Get full expression
-    Node* GetN();   // Get number
-    Node* GetE();   // Get addition or subtraction
-    Node* GetT();   // Get multiplication ot division
-    Node* GetP();   // Get parenthesis
-    Node* GetV();   // Get variable
-    Node* GetVN();  // Get variable, number, variable + number, sin, cos, ln
+    Node* GetG  (); // Get full expression
+    Node* GetE  (); // Get addition or subtraction
+    Node* GetT  (); // Get multiplication ot division
+    Node* GetPow(); // Get power
+    Node* GetP  (); // Get parenthesis
+    Node* GetVN (); // Get one of variable, number, variable + number, sin, cos, ln
+    Node* GetV  (); // Get variable
+    Node* GetN  (); // Get number
     Node* GetSin(); // Get sin
     Node* GetCos(); // Get cos
-    //Node* GetSC();  // Get sin or cos
-    Node* GetPow(); // Get power
-    Node* GetL();   // Get ln
+    Node* GetL  (); // Get ln
 
     Node* GetSP(const char* func_name); //Get strict parenthesis
 
